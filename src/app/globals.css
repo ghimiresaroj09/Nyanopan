@@ -1,0 +1,150 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens for the nyanopan storefront.
+ * Palette: warm paper neutrals, deep felt green, sand accents.
+ */
+:root {
+  --background: #fbf9f5;
+  --foreground: #221d19;
+  --card: #ffffff;
+  --card-foreground: #221d19;
+  --popover: #ffffff;
+  --popover-foreground: #221d19;
+  --primary: #213d2f;
+  --primary-foreground: #f8f6f0;
+  --secondary: #ede6da;
+  --secondary-foreground: #2f2821;
+  --muted: #f4eee2;
+  --muted-foreground: #706657;
+  --accent: #f2ebe0;
+  --accent-foreground: #221d19;
+  --destructive: #9a3324;
+  --destructive-foreground: #ffffff;
+  --border: #e6decb;
+  --input: #d9cfba;
+  --ring: #213d2f;
+  --radius: 0.375rem;
+
+  /* Warm Nepalese Craft & Earthy Editorial tokens */
+  --terracotta: #c46243;
+  --terracotta-dark: #a94e33;
+  --clay: #d97753;
+  --sand-warm: #f6efe2;
+  --ochre: #b88636;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-dark: var(--terracotta-dark);
+  --color-clay: var(--clay);
+  --color-ochre: var(--ochre);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-serif:
+    "Canela", "Newsreader", "Playfair Display", "Baskerville",
+    "Garamond", "Georgia", "Times New Roman", serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background-color: #eed6c9;
+    color: #2b1f1a;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shared page gutter. */
+.container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 76rem;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .container-page {
+    padding-inline: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .container-page {
+    padding-inline: 2rem;
+  }
+}
+
+/* Editorial accent ornaments */
+.editorial-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--terracotta);
+}
+
+.editorial-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 1.25rem;
+  height: 1px;
+  background-color: var(--terracotta);
+}
+
+.subtle-paper-texture {
+  background-color: var(--background);
+  background-image: radial-gradient(rgba(196, 98, 67, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
