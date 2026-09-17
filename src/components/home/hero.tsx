@@ -114,15 +114,10 @@ export function Hero() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Skip particles on mobile for better performance
-    const isMobile = window.innerWidth < 640;
-    if (isMobile) return;
-
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
       antialias: true,
-      powerPreference: "low-power", // Optimize for battery life on mobile
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -207,8 +202,8 @@ export function Hero() {
         scrollTrigger: {
           trigger: container,
           start: "top top",
-          end: () => window.innerWidth < 640 ? "+=2800" : "+=4200", // Shorter scroll on mobile
-          scrub: window.innerWidth < 640 ? 0.5 : 0.8, // Faster scrub on mobile for smoother feel
+          end: "+=4200",
+          scrub: 0.8,
           pin: true,
           anticipatePin: 1,
           onUpdate: (self) => {
@@ -279,8 +274,6 @@ export function Hero() {
       // 2. Explodes outward into the 3 distinct crafted layers (Upper, Insole, Sole) with callouts
       // 3. Holds open for inspection
       // 4. Compresses back together and cleanly transitions into the seamlessly closed shoe!
-      const isMobile = window.innerWidth < 640;
-      
       if (
         layerUpperRef.current &&
         layerFootbedRef.current &&
@@ -288,10 +281,6 @@ export function Hero() {
         assembledShoeRef.current &&
         explodedStackRef.current
       ) {
-        // Simplified animation on mobile for better performance
-        const layerDistance = isMobile ? 20 : 35;
-        const animDuration = isMobile ? 0.5 : 0.7;
-        
         masterTl
           // Step 1: Closed shoe opens -> cross-fades into exploded layers separating
           .fromTo(
@@ -309,19 +298,19 @@ export function Hero() {
           .fromTo(
             layerUpperRef.current,
             { y: 70, scale: 0.97 },
-            { y: -layerDistance, scale: 1.0, duration: animDuration, ease: "power2.out" },
+            { y: -35, scale: 1.0, duration: 0.7, ease: "power2.out" },
             3.3
           )
           .fromTo(
             layerFootbedRef.current,
             { y: 25, scale: 0.97 },
-            { y: 0, scale: 1.02, duration: animDuration, ease: "power2.out" },
+            { y: 0, scale: 1.02, duration: 0.7, ease: "power2.out" },
             3.3
           )
           .fromTo(
             layerSoleRef.current,
             { y: -20, scale: 0.97 },
-            { y: layerDistance, scale: 1.0, duration: animDuration, ease: "power2.out" },
+            { y: 35, scale: 1.0, duration: 0.7, ease: "power2.out" },
             3.3
           );
 
@@ -330,7 +319,7 @@ export function Hero() {
           masterTl.fromTo(
             shadowRef.current,
             { scaleX: 0.95, scaleY: 0.9, opacity: 0.6 },
-            { scaleX: 1.15, scaleY: 1.1, opacity: 0.85, duration: animDuration },
+            { scaleX: 1.15, scaleY: 1.1, opacity: 0.85, duration: 0.7 },
             3.3
           );
         }
@@ -339,17 +328,17 @@ export function Hero() {
         masterTl
           .to(
             layerUpperRef.current,
-            { y: 70, scale: 0.97, duration: animDuration, ease: "power2.inOut" },
+            { y: 70, scale: 0.97, duration: 0.7, ease: "power2.inOut" },
             4.2
           )
           .to(
             layerFootbedRef.current,
-            { y: 25, scale: 0.97, duration: animDuration, ease: "power2.inOut" },
+            { y: 25, scale: 0.97, duration: 0.7, ease: "power2.inOut" },
             4.2
           )
           .to(
             layerSoleRef.current,
-            { y: -20, scale: 0.97, duration: animDuration, ease: "power2.inOut" },
+            { y: -20, scale: 0.97, duration: 0.7, ease: "power2.inOut" },
             4.2
           )
           // When fully shrunk, cross-fade back into the perfectly closed original shoe!
@@ -367,7 +356,7 @@ export function Hero() {
         if (shadowRef.current) {
           masterTl.to(
             shadowRef.current,
-            { scaleX: 0.95, scaleY: 0.9, opacity: 0.6, duration: animDuration },
+            { scaleX: 0.95, scaleY: 0.9, opacity: 0.6, duration: 0.7 },
             4.2
           );
         }
@@ -399,19 +388,17 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-[#fbf9f5] text-[#2c2724] font-sans border-b border-[#ece4d5]" style={{ willChange: 'transform' }}>
+    <section className="relative w-full overflow-hidden bg-[#fbf9f5] text-[#2c2724] font-sans border-b border-[#ece4d5]">
       {/* Background Three.js Ambient Particle Layer */}
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0 z-0 opacity-60 hidden sm:block"
-        style={{ willChange: 'transform' }}
+        className="pointer-events-none absolute inset-0 z-0 opacity-60"
       />
 
       {/* Main Scrollytelling Pinned Stage Container */}
       <div
         ref={containerRef}
         className="relative h-screen w-full overflow-hidden flex items-center justify-center pt-8"
-        style={{ transform: 'translateZ(0)', willChange: 'transform' }}
       >
         {/* Soft Organic Background Radial Glow */}
         <div
