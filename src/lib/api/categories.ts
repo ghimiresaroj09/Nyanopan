@@ -30,7 +30,7 @@ export interface CategoriesResponse {
 export async function getCategories(): Promise<Category[]> {
   try {
     const response = await fetch(BACKEND_API_URL, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 60 }, // Cache for 1 minute (was 1 hour)
     });
 
     if (!response.ok) {

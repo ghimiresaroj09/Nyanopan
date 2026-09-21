@@ -53,6 +53,30 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/inside",
+        destination: "/collections/all-slippers",
+        permanent: true,
+      },
+      {
+        source: "/outside",
+        destination: "/collections/all-slippers",
+        permanent: true,
+      },
+      {
+        source: "/kids",
+        destination: "/collections/all-slippers",
+        permanent: true,
+      },
+      {
+        source: "/babies",
+        destination: "/collections/all-slippers",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
