@@ -15,7 +15,7 @@ grey_val = (arr[is_wool, 0] + arr[is_wool, 1] + arr[is_wool, 2]) / (3.0 * 255.0)
 # 1. Natural Mountain Grey
 Image.fromarray(arr.astype(np.uint8)).save('/home/user/nyanopan-store/public/brand/story_color_grey.png')
 
-# 2. Himalayan Forest Green
+# 2. Himalayan
 green_arr = arr.copy()
 green_arr[is_wool, 0] = np.clip(grey_val * 62.0, 0, 255)
 green_arr[is_wool, 1] = np.clip(grey_val * 96.0, 0, 255)

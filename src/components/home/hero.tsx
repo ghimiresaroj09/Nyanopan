@@ -28,8 +28,8 @@ const COLORWAYS = [
     description: "Original natural undyed Tibetan highland wool felt with pure lanolin.",
   },
   {
-    name: "Himalayan Forest Green",
-    image: "/brand/slipper_green.png",
+    name: "Himalayan",
+    image: "/brand/slipper_brown.png",
     cssCode: "#3e5243",
     bgTint: "rgba(62, 82, 67, 0.08)",
     description: "Steeped slowly with wild Himalayan nettle and walnut rind botanicals.",

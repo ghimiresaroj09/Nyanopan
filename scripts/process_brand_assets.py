@@ -46,7 +46,7 @@ green_arr = arr.copy()
 green_arr[is_wool, 0] = np.clip(grey_val * 62.0, 0, 255)
 green_arr[is_wool, 1] = np.clip(grey_val * 96.0, 0, 255)
 green_arr[is_wool, 2] = np.clip(grey_val * 68.0, 0, 255)
-Image.fromarray(green_arr.astype(np.uint8)).save('/home/user/nyanopan-store/public/brand/slipper_green.png')
+Image.fromarray(green_arr.astype(np.uint8)).save('/home/user/nyanopan-store/public/brand/slipper_brown.png')
 
 # Navy
 navy_arr = arr.copy()
