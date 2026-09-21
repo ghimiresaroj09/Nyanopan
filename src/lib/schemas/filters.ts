@@ -43,7 +43,8 @@ const sort = z
     "newest",
     "oldest",
   ])
-  .optional();
+  .optional()
+  .default("featured");
 
 export const searchParamsSchema = z.object({
   color: csv,
@@ -63,7 +64,14 @@ export function parseSearchParams(
   for (const [key, value] of Object.entries(params)) {
     single[key] = Array.isArray(value) ? value[0] : value;
   }
-  return searchParamsSchema.parse(single);
+  
+  try {
+    return searchParamsSchema.parse(single);
+  } catch (error) {
+    // If parsing fails (e.g., invalid sort value), try with default sort
+    const { sort: _sort, ...rest } = single;
+    return searchParamsSchema.parse(rest);
+  }
 }
 
 export type { Gender, SoleType, SortOption };
