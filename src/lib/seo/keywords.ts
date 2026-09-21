@@ -175,7 +175,7 @@ export function generateProductKeywords(params: {
   gender?: string;
   isHandmade?: boolean;
 }): string[] {
-  const { categorySlug, productName, modelName, gender, isHandmade = true } = params;
+  const { categorySlug, modelName, gender } = params;
   
   const keywords: string[] = [];
   

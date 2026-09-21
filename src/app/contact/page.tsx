@@ -4,7 +4,7 @@ import { getSiteConfiguration, fallbackConfig } from "@/lib/api/config";
 
 export const metadata: Metadata = {
   title: "Contact Us | Nyanopan",
-  description: "Get in touch with us. We're here to help with any questions about our handcrafted wool slippers.",
+  description: "Get in touch with us. We&apos;re here to help with any questions about our handcrafted wool slippers.",
 };
 
 export default async function ContactPage() {
@@ -20,7 +20,7 @@ export default async function ContactPage() {
               Get in Touch
             </h1>
             <p className="mt-4 text-base sm:text-lg text-[#675c4e] max-w-2xl mx-auto">
-              Have a question about our handcrafted wool slippers? We'd love to hear from you.
+              Have a question about our handcrafted wool slippers? We&apos;d love to hear from you.
             </p>
           </div>
         </div>

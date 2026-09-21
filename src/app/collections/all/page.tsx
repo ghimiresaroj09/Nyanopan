@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { CollectionBrowser } from "@/components/collection/collection-browser";
 import { PageHeader } from "@/components/shared/page-header";
 import { getProducts, type Product as APIProduct } from "@/lib/api/products";
-import { mapSortToAPI, mapSoleTypeToAPI } from "@/lib/api/sort-mapper";
+import { mapSortToAPI } from "@/lib/api/sort-mapper";
 import type { Product, SortOption } from "@/types/product";
 
 export const metadata: Metadata = {

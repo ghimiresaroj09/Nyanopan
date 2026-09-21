@@ -18,7 +18,7 @@ export function getProducts(): Product[] {
   return [];
 }
 
-export function getProduct(slug: string): Product | undefined {
+export function getProduct(_slug: string): Product | undefined {
   return undefined;
 }
 
@@ -26,7 +26,7 @@ export function getCollections() {
   return collections;
 }
 
-export function getCollectionFacets(collectionSlug: string): CollectionFacets {
+export function getCollectionFacets(_collectionSlug: string): CollectionFacets {
   // Return empty facets - data now comes from API
   return { 
     colors: [], 
@@ -92,14 +92,14 @@ export async function fetchProducts(): Promise<Product[]> {
   return [];
 }
 
-export async function fetchProduct(slug: string): Promise<Product | undefined> {
+export async function fetchProduct(_slug: string): Promise<Product | undefined> {
   await delay(NETWORK_LATENCY_MS);
   return undefined;
 }
 
 export async function fetchRelatedProducts(
-  model: string,
-  excludeSlug: string
+  _model: string,
+  _excludeSlug: string
 ): Promise<Product[]> {
   await delay(NETWORK_LATENCY_MS);
   return [];
@@ -110,7 +110,7 @@ export interface SearchResult {
   color: { name: string; image: string };
 }
 
-export async function fetchSearchResults(query: string): Promise<SearchResult[]> {
+export async function fetchSearchResults(_query: string): Promise<SearchResult[]> {
   await delay(NETWORK_LATENCY_MS);
   // Search now handled by API
   return [];

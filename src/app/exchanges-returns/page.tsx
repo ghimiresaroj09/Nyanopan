@@ -47,7 +47,7 @@ export default async function ExchangesReturnsPage() {
         description="Exchange and return information is currently unavailable."
         updated="14 September 2026"
       >
-        <p>We're sorry, exchange and return information is currently unavailable. Please contact us for details.</p>
+        <p>We&apos;re sorry, exchange and return information is currently unavailable. Please contact us for details.</p>
       </ProsePage>
     );
   }

@@ -51,7 +51,7 @@ export default async function PrivacyPolicyPage() {
         description="Privacy policy information is currently unavailable."
         updated="14 September 2026"
       >
-        <p>We're sorry, privacy policy information is currently unavailable. Please contact us for details.</p>
+        <p>We&apos;re sorry, privacy policy information is currently unavailable. Please contact us for details.</p>
       </ProsePage>
     );
   }

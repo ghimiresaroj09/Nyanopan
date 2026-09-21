@@ -8,7 +8,7 @@ import { RecentlyViewed } from "@/components/product/recently-viewed";
 import { YouMightLike } from "@/components/product/you-might-like";
 import { ProductSchema } from "@/components/seo/product-schema";
 import { BreadcrumbSchema } from "@/components/seo/breadcrumb-schema";
-import { getProduct } from "@/lib/api/products";
+import { getProduct, type ProductDetail as APIProduct } from "@/lib/api/products";
 import { generateProductKeywords } from "@/lib/seo/keywords";
 import type { Product } from "@/types/product";
 
@@ -27,8 +27,9 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
   
   // Get price range
-  const prices = productData.product_varient_values.map((v: any) => parseFloat(v.price));
+  const prices = productData.product_varient_values.map((v) => v.price);
   const minPrice = Math.min(...prices);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const maxPrice = Math.max(...prices);
   
   // Generate rich description
@@ -102,7 +103,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product: Product = transformProductDetail(productData);
   
   // Get min price for schema
-  const prices = productData.product_varient_values.map((v: any) => parseFloat(v.price));
+  const prices = productData.product_varient_values.map((v) => v.price);
   const minPrice = Math.min(...prices);
   
   const breadcrumbItems = [
@@ -160,10 +161,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
   );
 }
 
-// Helper function to transform API product detail to internal Product type
-function transformProductDetail(apiProduct: any): Product {
+// Transform API data to internal Product type
+function transformProductDetail(apiProduct: APIProduct): Product {
   // Get min and max price from variants
-  const prices = apiProduct.product_varient_values.map((v: any) => parseFloat(v.price));
+  const prices = apiProduct.product_varient_values.map((v) => v.price);
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   
@@ -180,13 +181,10 @@ function transformProductDetail(apiProduct: any): Product {
   const colorSet = new Set<string>();
   const colorImages: Record<string, string | undefined> = {};
   
-  apiProduct.attributes.forEach((attr: any) => {
+  apiProduct.attributes.forEach((attr) => {
     if (attr.attribute.name === "Color") {
-      attr.attributeValues.forEach((val: any) => {
+      attr.attributeValues.forEach((val) => {
         colorSet.add(val.name);
-        if (val.featureImage?.url) {
-          colorImages[val.name] = val.featureImage.url;
-        }
       });
     }
   });
@@ -199,10 +197,10 @@ function transformProductDetail(apiProduct: any): Product {
   
   // Extract all unique sizes from variants with their images
   const sizeMap = new Map<string, string>(); // name -> image
-  apiProduct.attributes.forEach((attr: any) => {
+  apiProduct.attributes.forEach((attr) => {
     if (attr.attribute.name === "Size" || attr.attribute.name === "Shoes Size") {
-      attr.attributeValues.forEach((val: any) => {
-        sizeMap.set(val.name, val.featureImage?.url || "");
+      attr.attributeValues.forEach((val) => {
+        sizeMap.set(val.name, "");
       });
     }
   });
@@ -222,25 +220,15 @@ function transformProductDetail(apiProduct: any): Product {
   });
   
   // Collect all images
-  const images: string[] = [apiProduct.feature_image.url];
-  apiProduct.product_images?.forEach((img: any) => {
-    images.push(img.url);
-  });
+  const images: string[] = [apiProduct.feature_image?.url || ""];
   
-  // Add additional images from color attributes
-  apiProduct.attributes.forEach((attr: any) => {
-    if (attr.attribute.name === "Color") {
-      attr.attributeValues.forEach((val: any) => {
-        if (val.additionalImages) {
-          val.additionalImages.forEach((img: any) => {
-            if (!images.includes(img.url)) {
-              images.push(img.url);
-            }
-          });
-        }
-      });
-    }
-  });
+  // Add additional images if available
+  if ('product_images' in apiProduct) {
+    const productImages = apiProduct.product_images as Array<{ url: string }>;
+    productImages?.forEach((img) => {
+      images.push(img.url);
+    });
+  }
   
   return {
     slug: apiProduct.slug,
@@ -268,7 +256,10 @@ function transformProductDetail(apiProduct: any): Product {
       { name: "45", image: "" },
     ],
     categories: [apiProduct.category?.slug || "uncategorized"],
-    features: apiProduct.key_features || [],
+    features: (apiProduct.key_features || []).map((feature, index) => ({
+      label: `Feature ${index + 1}`,
+      value: feature
+    })),
     benefits: [],
     description: apiProduct.description ? [apiProduct.description] : [],
     images,

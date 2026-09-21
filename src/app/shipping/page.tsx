@@ -47,7 +47,7 @@ export default async function ShippingPage() {
         description="Shipping information is currently unavailable."
         updated="14 September 2026"
       >
-        <p>We're sorry, shipping information is currently unavailable. Please contact us for details.</p>
+        <p>We&apos;re sorry, shipping information is currently unavailable. Please contact us for details.</p>
       </ProsePage>
     );
   }

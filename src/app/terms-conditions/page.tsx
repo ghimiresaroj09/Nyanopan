@@ -51,7 +51,7 @@ export default async function TermsConditionsPage() {
         description="Terms and conditions information is currently unavailable."
         updated="14 September 2026"
       >
-        <p>We're sorry, terms and conditions information is currently unavailable. Please contact us for details.</p>
+        <p>We&apos;re sorry, terms and conditions information is currently unavailable. Please contact us for details.</p>
       </ProsePage>
     );
   }

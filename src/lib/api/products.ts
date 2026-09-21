@@ -82,7 +82,7 @@ export interface ProductDetail extends Omit<Product, 'primary_image' | 'price_ra
   rating: {
     average: number;
     total: number;
-    descriptions: any[];
+    descriptions: unknown[];
   };
   product_varient_values: ProductVariant[];
 }
