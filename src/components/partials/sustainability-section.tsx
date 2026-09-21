@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { images } from "@/data/images";
 import { cn } from "@/lib/utils";
 import type { HomepageSection3 } from "@/lib/api/homepage";
 
@@ -16,7 +15,7 @@ export function SustainabilitySection({ className, data }: SustainabilitySection
   const title = data?.title || "Sustainably harvested, zero-waste crafted";
   const description = data?.description || `The wool is sheared humanely and washed without petroleum detergents.
               The wet felting process relies solely on soft mountain water, botanical soap, heat, and hand pressure.`;
-  const image = data?.image || images.sheepGreenGrass;
+  const image = data?.image || "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=1200&q=80&auto=format&fit=crop";
 
   return (
     <section className={cn("border-t border-border/60 bg-muted/40 py-18 md:py-26", className)}>

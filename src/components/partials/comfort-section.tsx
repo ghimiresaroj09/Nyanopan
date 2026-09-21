@@ -1,6 +1,5 @@
 import Image from "next/image";
 
-import { images } from "@/data/images";
 import { cn } from "@/lib/utils";
 import type { HomepageSection2 } from "@/lib/api/homepage";
 
@@ -15,7 +14,7 @@ export function ComfortSection({ className, data }: ComfortSectionProps) {
   const description = data?.description || `The seamless single-piece construction eliminates irritating interior seams.
               Crafted from 100% natural mountain wool from free-grazing sheep, each pair acts
               as a natural microclimate for your feet.`;
-  const image = data?.image || images.feetInSlippers;
+  const image = data?.image || "https://images.unsplash.com/photo-1650307535558-fa2b39ed16eb?w=1200&q=80&auto=format&fit=crop";
   const features = data?.feature || [
     {
       title: "Italian Calfskin",

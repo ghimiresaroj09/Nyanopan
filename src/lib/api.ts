@@ -1,6 +1,5 @@
 import type { CollectionFacets } from "@/types/collection";
 import type { Gender, Product, ProductFilters, SoleType, SortOption } from "@/types/product";
-import { collections } from "@/data/collections";
 
 /**
  * Data access layer - Static product data removed.
@@ -23,7 +22,7 @@ export function getProduct(_slug: string): Product | undefined {
 }
 
 export function getCollections() {
-  return collections;
+  return [];
 }
 
 export function getCollectionFacets(_collectionSlug: string): CollectionFacets {

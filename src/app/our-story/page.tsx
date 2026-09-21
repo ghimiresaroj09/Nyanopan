@@ -8,7 +8,6 @@ import { OurMakersSection } from "@/components/partials/our-makers-section";
 import { getOurMakers } from "@/lib/api/our-makers";
 import { getOurStory } from "@/lib/api/our-story";
 import { generateContentKeywords } from "@/lib/seo/keywords";
-import { images } from "@/data/images";
 
 export async function generateMetadata(): Promise<Metadata> {
   const storyData = await getOurStory();
@@ -18,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ? storyData.description.replace(/<[^>]*>/g, "").substring(0, 160)
     : "How Nyanopan slippers are made: hand felted from natural wool in a fair trade workshop in Kathmandu, Nepal.";
   
-  const firstImage = storyData?.section1?.image || images.prayerFlags;
+  const firstImage = storyData?.section1?.image || "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200&q=80&auto=format&fit=crop";
   
   return {
     title,
@@ -82,7 +81,7 @@ export default async function OurStoryPage() {
       ) : (
         <section className="container-page grid items-center gap-10 py-14 md:py-20 lg:grid-cols-2 lg:gap-16">
           <Image
-            src={images.prayerFlags}
+            src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=900&q=80&auto=format&fit=crop"
             alt="Prayer flags in Nepal"
             width={900}
             height={640}
@@ -158,7 +157,7 @@ export default async function OurStoryPage() {
               </Button>
             </div>
             <Image
-              src={images.hangingSlippers}
+              src="https://images.unsplash.com/photo-1556656793-08538906a9f8?w=900&q=80&auto=format&fit=crop"
               alt="Hand made felt slippers hanging in the workshop"
               width={900}
               height={640}
@@ -203,17 +202,17 @@ export default async function OurStoryPage() {
             <div className="grid gap-8 md:grid-cols-3">
               {[
                 {
-                  image: images.sheepHerd,
+                  image: "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=600&q=80&auto=format&fit=crop",
                   title: "Free-grazing sheep",
                   text: "Pure new wool from sheep that graze freely, gathered without harm to the animals.",
                 },
                 {
-                  image: images.yarnWoodenTable,
+                  image: "https://images.unsplash.com/photo-1508139430882-c41044324b2c?w=600&q=80&auto=format&fit=crop",
                   title: "Hand washing and felting",
                   text: "The wool is washed by hand and felted with water, pressure and heat. No chemicals.",
                 },
                 {
-                  image: images.pileOfSlippers,
+                  image: "https://images.unsplash.com/photo-1556656793-b5e29ac3a0bd?w=600&q=80&auto=format&fit=crop",
                   title: "One piece, no waste",
                   text: "Each slipper is felted in a single piece. Leftover felt returns to the workshop as Lungta editions.",
                 },

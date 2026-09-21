@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { images } from "@/data/images";
 import type { HomepageCollectionsData } from "@/lib/api/homepage-collections";
 
 const defaultTiles = [
@@ -10,28 +9,28 @@ const defaultTiles = [
     title: "Inside",
     description: "Leather soles for smooth floors",
     href: "/collections/all-slippers?sole=leather",
-    image: images.bedroomSlippers,
+    image: "https://images.unsplash.com/photo-1543420629-5350879dd4cd?w=420&q=80&auto=format&fit=crop",
     alt: "White wool slippers indoors",
   },
   {
     title: "Outside",
     description: "Rubber soles for every surface",
     href: "/collections/all-slippers?sole=rubber",
-    image: images.slipOnShoes,
+    image: "https://images.unsplash.com/photo-1603218162086-fba879e8c17a?w=420&q=80&auto=format&fit=crop",
     alt: "Wool slippers with rubber soles",
   },
   {
     title: "Kids",
     description: "Warm feet for small explorers",
     href: "/collections/slippers-kids",
-    image: images.polkaFlipFlops,
+    image: "https://images.unsplash.com/photo-1594150878496-03fd4a4afaf2?w=420&q=80&auto=format&fit=crop",
     alt: "Colourful children's footwear",
   },
   {
     title: "Baby",
     description: "Soft booties for the smallest feet",
     href: "/collections/baby-booties",
-    image: images.pinkKnitShoes,
+    image: "https://images.unsplash.com/photo-1513091250092-b06c2b7981bc?w=420&q=80&auto=format&fit=crop",
     alt: "Baby booties",
   },
 ];

@@ -4,7 +4,6 @@ import Image from "next/image";
 import { PageHeader } from "@/components/shared/page-header";
 import { getSustainability } from "@/lib/api/sustainability";
 import { generateContentKeywords } from "@/lib/seo/keywords";
-import { images } from "@/data/images";
 
 export async function generateMetadata(): Promise<Metadata> {
   const sustainabilityData = await getSustainability();
@@ -14,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ? sustainabilityData.description.replace(/<[^>]*>/g, "").substring(0, 160)
     : "How Nyanopan keeps production sustainable: natural materials, fair trade labour and zero-waste felting.";
   
-  const firstImage = sustainabilityData?.sections?.[0]?.image || images.sheepGreenGrass;
+  const firstImage = sustainabilityData?.sections?.[0]?.image || "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&q=80&auto=format&fit=crop";
   
   return {
     title,
@@ -55,19 +54,19 @@ export default async function SustainabilityPage() {
       description: `<p>The wool felt is made of 100% pure new wool from free-grazing sheep. It is washed and felted without the use of chemicals.</p>
       <p>The soles are made of undyed, 100% vegetable-tanned leather or of recycled rubber. They are attached to the shaft with a natural, solvent-free latex glue.</p>
       <p>Because the slippers are made of only wool, leather and rubber, they can be composted or recycled at the end of their life.</p>`,
-      image: images.sheepGreenGrass,
+      image: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=900&q=80&auto=format&fit=crop",
     },
     {
       title: "Zero-waste felting",
       description: `<p>Cutting a slipper out of a felt sheet leaves material behind. In most factories that material would be thrown away. In the nyanopan workshop it is collected and re-felted into new sheets.</p>
       <p>Those sheets become the Lungta special editions: marbled slippers where every pair carries its own colour pattern. This way, no material is wasted.</p>`,
-      image: images.textilesColourful,
+      image: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=900&q=80&auto=format&fit=crop",
     },
     {
       title: "A small, deliberate collection",
       description: `<p>nyanopan deliberately keeps the collection small: a few basic models for women, men and children, each available in a limited number of colours.</p>
       <p>No seasonal throwaway collections, no overproduction. A model is made as long as it works, and improved only when the improvement is real.</p>`,
-      image: images.yarnRedBlue,
+      image: "https://images.unsplash.com/photo-1508139430882-c41044324b2c?w=900&q=80&auto=format&fit=crop",
     },
   ];
 

@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { images } from "@/data/images";
 import { cn } from "@/lib/utils";
 import type { HomepageSection1 } from "@/lib/api/homepage";
 
@@ -18,7 +17,7 @@ export function FairTradeSection({ className, data }: FairTradeSectionProps) {
               The entire process is human work: natural mountain wool is washed,
               felted by hand using warm water, gently shaped onto wooden lasts, and sun-dried.`;
   const quote = data?.quote || `"Each pair carries the stitched signature of its maker. When you slip into nyanopan, you know exactly whose hands shaped your warmth."`;
-  const image = data?.image || images.embroideredSlippers;
+  const image = data?.image || "https://images.unsplash.com/photo-1782304986390-a12d65b74d2f?w=1200&q=80&auto=format&fit=crop";
 
   return (
     <section className={cn("border-t border-border/60 bg-muted/30 py-18 md:py-26", className)}>
