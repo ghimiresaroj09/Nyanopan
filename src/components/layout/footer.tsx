@@ -13,20 +13,10 @@ export async function Footer() {
   const columns = [
     {
       title: "Collections",
-      links: categories.length > 0 
-        ? categories.map(category => ({
-            href: `/collections/${category.slug}`,
-            label: category.name,
-          }))
-        : [
-            { href: "/collections/all-slippers", label: "All Slippers" },
-            { href: "/collections/high-cut-slippers", label: "High-Cut Slippers" },
-            { href: "/collections/slip-on-slippers", label: "Slip-On Slippers" },
-            { href: "/collections/slippers-women", label: "Women's Slippers" },
-            { href: "/collections/slippers-men", label: "Men's Slippers" },
-            { href: "/collections/slippers-kids", label: "Kids Slippers" },
-            { href: "/collections/baby-booties", label: "Baby Booties" },
-          ],
+      links: categories.map(category => ({
+        href: `/collections/${category.slug}`,
+        label: category.name,
+      })),
     },
     {
       title: "Information",
