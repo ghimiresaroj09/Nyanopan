@@ -1,13 +1,25 @@
 import type { MetadataRoute } from "next";
 
-import { siteConfig } from "@/config/site";
+import { getSiteConfig } from "@/config/site";
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const siteConfig = await getSiteConfig();
+  
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-    },
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/api/",
+          "/cart",
+          "/checkout",
+          "/checkout/*",
+          "/_next/",
+          "/demo/*",
+        ],
+      },
+    ],
     sitemap: `${siteConfig.url}/sitemap.xml`,
   };
 }

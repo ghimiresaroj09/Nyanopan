@@ -3,8 +3,9 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { images } from "@/data/images";
+import type { HomepageCollectionsData } from "@/lib/api/homepage-collections";
 
-const tiles = [
+const defaultTiles = [
   {
     title: "Inside",
     description: "Leather soles for smooth floors",
@@ -35,16 +36,32 @@ const tiles = [
   },
 ];
 
-export function CategoryTiles() {
+interface CategoryTilesProps {
+  data: HomepageCollectionsData | null;
+}
+
+export function CategoryTiles({ data }: CategoryTilesProps) {
+  const tiles = data?.collections.map(collection => ({
+    title: collection.name,
+    description: collection.intro,
+    href: collection.link,
+    image: collection.image,
+    alt: collection.name,
+  })) || defaultTiles;
+
+  const tag = data?.tag || "Curated Collections";
+  const title = data?.title || "Find your companion for home & outdoors";
+  const description = data?.description || "Tailored with vegetable-tanned calfskin for quiet floor walking or natural crepe rubber for patio steps.";
+
   return (
     <section className="container-page py-14 md:py-20">
       <div className="mb-10 text-center">
-        <span className="editorial-eyebrow">Curated Collections</span>
+        <span className="editorial-eyebrow">{tag}</span>
         <h2 className="mt-3 font-serif text-3xl md:text-4xl text-foreground">
-          Find your companion for home & outdoors
+          {title}
         </h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg mx-auto">
-          Tailored with vegetable-tanned calfskin for quiet floor walking or natural crepe rubber for patio steps.
+          {description}
         </p>
       </div>
 

@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 
 import { ProductCard } from "@/components/collection/product-card";
-import { getProductBySlug } from "@/data/products";
 import { recentlyViewed, useRecentlyViewedSlugs } from "@/hooks/use-recently-viewed";
 import type { Product } from "@/types/product";
 
@@ -14,6 +13,7 @@ interface RecentlyViewedProps {
 /**
  * Local, client-side history of products the visitor opened. Nothing
  * is sent to any server.
+ * TODO: Fetch products from API instead of static data
  */
 export function RecentlyViewed({ currentSlug }: RecentlyViewedProps) {
   const slugs = useRecentlyViewedSlugs();
@@ -22,11 +22,8 @@ export function RecentlyViewed({ currentSlug }: RecentlyViewedProps) {
     recentlyViewed.record(currentSlug);
   }, [currentSlug]);
 
-  const items = slugs
-    .filter((slug) => slug !== currentSlug)
-    .map((slug) => getProductBySlug(slug))
-    .filter((product): product is Product => Boolean(product))
-    .slice(0, 4);
+  // Products need to be fetched from API
+  const items: Product[] = [];
 
   if (items.length === 0) return null;
 

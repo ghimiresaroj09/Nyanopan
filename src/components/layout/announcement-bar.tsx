@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const links = [
-  { href: "/shipping", label: "Free Shipping From € 150" },
+  { href: "/shipping", label: "Shipping Across Nepal" },
   { href: "/collections/all-slippers", label: "100% Pure Wool Felt" },
   { href: "/our-story", label: "Fair Trade Nepal" },
 ];

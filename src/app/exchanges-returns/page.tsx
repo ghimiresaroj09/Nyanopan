@@ -1,103 +1,67 @@
 import type { Metadata } from "next";
 
-import { ProsePage, ProseSection } from "@/components/shared/prose-page";
+import { ProsePage } from "@/components/shared/prose-page";
+import { getPolicyByType } from "@/lib/api/policies";
 
-export const metadata: Metadata = {
-  title: "Exchanges and Returns",
-  description:
-    "How exchanges and returns work at nyanopan, including return costs per country.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const policy = await getPolicyByType("EXCHANGES_RETURNS");
+  
+  const title = policy?.title || "Exchanges and Returns";
+  const description = policy?.content 
+    ? policy.content.replace(/<[^>]*>/g, "").substring(0, 160)
+    : "How exchanges and returns work at Nyanopan, including return costs per country.";
+  
+  return {
+    title,
+    description,
+    keywords: [
+      "return policy",
+      "exchange policy",
+      "refund policy",
+      "30 day returns",
+      "product returns",
+    ],
+    alternates: { canonical: "/exchanges-returns" },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: "/exchanges-returns",
+      siteName: "Nyanopan",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  };
+}
 
-const RETURN_COSTS = [
-  { country: "Nepal", cost: "Rs. 150" },
-  { country: "India", cost: "Rs. 450" },
-  { country: "Netherlands", cost: "Rs. 695" },
-  { country: "Belgium", cost: "Rs. 795" },
-  { country: "Germany", cost: "Rs. 895" },
-  { country: "Luxembourg", cost: "Rs. 895" },
-  { country: "France", cost: "Rs. 995" },
-  { country: "Austria", cost: "Rs. 995" },
-  { country: "Other countries", cost: "Rs. 1,495" },
-];
+export default async function ExchangesReturnsPage() {
+  const policy = await getPolicyByType("EXCHANGES_RETURNS");
 
-export default function ExchangesReturnsPage() {
+  if (!policy) {
+    return (
+      <ProsePage
+        title="Exchanges & Returns"
+        description="Exchange and return information is currently unavailable."
+        updated="14 September 2026"
+      >
+        <p>We're sorry, exchange and return information is currently unavailable. Please contact us for details.</p>
+      </ProsePage>
+    );
+  }
+
   return (
     <ProsePage
-      title="Exchanges & Returns"
+      title={policy.title}
       description="30 days to decide, straightforward exchanges, and return costs that depend on where you ship from."
       updated="14 September 2026"
     >
-      <ProseSection title="The return window">
-        <p>
-          You can return or exchange unworn slippers within 30 days of
-          delivery. Slippers that have only been tried on indoors count as
-          unworn. Try them on a clean, dry floor and keep the packaging until
-          you are sure about the size.
-        </p>
-        <p>
-          Wool felt adapts to the shape of the foot, so the first few minutes
-          indoors are enough to judge the fit.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="Exchanges">
-        <p>
-          An exchange is the fastest way to a better size. If you exchange for
-          a different size or colour, we pay the shipping of the replacement
-          pair. One free exchange per order.
-        </p>
-        <p>How it works:</p>
-        <ol className="list-decimal space-y-1.5 pl-5">
-          <li>Email our support team with your order number and the size you need.</li>
-          <li>We reserve the replacement and send you a return label for your country.</li>
-          <li>Drop the parcel off and keep the receipt.</li>
-          <li>The replacement ships as soon as the carrier scans your return.</li>
-        </ol>
-        <p>
-          If the size you need is out of stock, you can wait for it, choose
-          another colour, or receive a full refund.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="Return costs per country">
-        <p>
-          When you return a pair without exchanging it, the return cost for
-          your country is deducted from the refund. The cost depends on the
-          country you ship from.
-        </p>
-        <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-left">
-              <tr>
-                <th className="px-4 py-2.5 font-medium">Country</th>
-                <th className="px-4 py-2.5 font-medium">Return cost</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {RETURN_COSTS.map((row) => (
-                <tr key={row.country}>
-                  <td className="px-4 py-2.5">{row.country}</td>
-                  <td className="px-4 py-2.5">{row.cost}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p>
-          Returns because of a faulty product or a mistake on our side are
-          always free. In that case the full order value, including shipping,
-          is refunded.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="Refunds">
-        <p>
-          Refunds are issued to the original payment method within 14 days of
-          the return arriving at our warehouse. You receive a confirmation
-          email when the refund is processed. Depending on your bank, the
-          amount can take a few extra days to appear.
-        </p>
-      </ProseSection>
+      <div 
+        className="space-y-6 [&_h2]:font-serif [&_h2]:text-2xl [&_h2]:text-foreground [&_h2]:mb-3 [&_p]:text-muted-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_ul]:text-muted-foreground [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1.5 [&_ol]:text-muted-foreground [&_table]:w-full [&_table]:text-sm [&_table]:border [&_table]:rounded-md [&_thead]:bg-muted [&_thead]:text-left [&_th]:px-4 [&_th]:py-2.5 [&_th]:font-medium [&_td]:px-4 [&_td]:py-2.5 [&_tbody]:divide-y [&_a]:underline [&_a]:underline-offset-2 [&_a]:text-foreground hover:[&_a]:text-terracotta [&_strong]:text-foreground [&_strong]:font-medium"
+        dangerouslySetInnerHTML={{ __html: policy.content }}
+      />
     </ProsePage>
   );
 }

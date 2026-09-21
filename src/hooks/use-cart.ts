@@ -11,7 +11,7 @@ export interface CartLine {
   url: string;
   image: string;
   colorName: string;
-  size: number;
+  size: string;
   quantity: number;
   unitPrice: number;
 }
@@ -67,7 +67,7 @@ function hydrate() {
   }
 }
 
-function lineId(productSlug: string, colorName: string, size: number): string {
+function lineId(productSlug: string, colorName: string, size: string): string {
   return `${productSlug}::${colorName.toLowerCase()}::${size}`;
 }
 
@@ -80,12 +80,14 @@ export const cart = {
     product: Product,
     colorName: string,
     colorImage: string,
-    size: number,
+    size: string,
     quantity = 1,
-    opts: { openDrawer?: boolean } = {}
+    opts: { openDrawer?: boolean; unitPrice?: number } = {}
   ) {
     const id = lineId(product.slug, colorName, size);
     const existing = state.lines.find((l) => l.id === id);
+    const unitPrice = opts.unitPrice ?? product.price; // Use variant price if provided, otherwise product price
+    
     const nextLines = existing
       ? state.lines.map((l) => (l.id === id ? { ...l, quantity: l.quantity + quantity } : l))
       : [
@@ -99,7 +101,7 @@ export const cart = {
             colorName,
             size,
             quantity,
-            unitPrice: product.price,
+            unitPrice,
           },
         ];
     setState({ lines: nextLines, isOpen: opts.openDrawer ?? true });

@@ -4,20 +4,30 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { images } from "@/data/images";
 import { cn } from "@/lib/utils";
+import type { HomepageSection1 } from "@/lib/api/homepage";
 
 interface FairTradeSectionProps {
   className?: string;
+  data?: HomepageSection1 | null;
 }
 
-export function FairTradeSection({ className }: FairTradeSectionProps) {
+export function FairTradeSection({ className, data }: FairTradeSectionProps) {
+  const tag = data?.tag || "Fair Trade Atelier";
+  const title = data?.title || "A small workshop that honors its craftspeople";
+  const description = data?.description || `Every nyanopan is shaped in a small cooperative workshop in Kathmandu.
+              The entire process is human work: natural mountain wool is washed,
+              felted by hand using warm water, gently shaped onto wooden lasts, and sun-dried.`;
+  const quote = data?.quote || `"Each pair carries the stitched signature of its maker. When you slip into nyanopan, you know exactly whose hands shaped your warmth."`;
+  const image = data?.image || images.embroideredSlippers;
+
   return (
     <section className={cn("border-t border-border/60 bg-muted/30 py-18 md:py-26", className)}>
       <div className="container-page grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
         <div className="relative">
           <div className="overflow-hidden rounded-xl border border-border/80 shadow-md">
             <Image
-              src={images.embroideredSlippers}
-              alt="Hand made felt slippers laid out at a market"
+              src={image}
+              alt={title}
               width={800}
               height={600}
               className="aspect-[4/3] w-full object-cover transition-transform duration-700 hover:scale-102"
@@ -32,22 +42,14 @@ export function FairTradeSection({ className }: FairTradeSectionProps) {
         </div>
 
         <div>
-          <span className="editorial-eyebrow">Fair Trade Atelier</span>
+          <span className="editorial-eyebrow">{tag}</span>
           <h2 className="mt-3 font-serif text-3xl sm:text-4xl lg:text-[42px] leading-tight text-foreground">
-            A small workshop that honors its craftspeople
+            {title}
           </h2>
           <div className="mt-6 space-y-4 text-base leading-relaxed text-muted-foreground">
-            <p>
-              Every nyanopan is shaped in a small cooperative workshop in Kathmandu.
-              The entire process is human work: natural mountain wool is washed,
-              felted by hand using warm water, gently shaped onto wooden lasts, and sun-dried.
-            </p>
-            <p>
-              Our artisans earn guaranteed fair living wages. On-site childcare is provided
-              at the workshop, and a dedicated education fund finances the schooling of our makers&apos; children.
-            </p>
+            <div dangerouslySetInnerHTML={{ __html: description }} />
             <p className="border-l-2 border-terracotta/70 pl-4 italic text-foreground/90 font-serif">
-              &ldquo;Each pair carries the stitched signature of its maker. When you slip into nyanopan, you know exactly whose hands shaped your warmth.&rdquo;
+              &ldquo;{quote}&rdquo;
             </p>
           </div>
           <div className="mt-8 flex items-center gap-4">

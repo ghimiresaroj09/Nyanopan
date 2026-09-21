@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Heart, Ruler } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { cart } from "@/hooks/use-cart";
 import { useWishlistHas, wishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format";
@@ -15,21 +15,119 @@ import type { Product } from "@/types/product";
 
 interface ProductBuyBoxProps {
   product: Product;
+  productData?: any; // Optional API product data with variants
+  colorIndex?: number; // Controlled color index
+  onColorChange?: (index: number) => void; // Color change handler
+  onSpecialEditionChange?: (isSpecial: boolean) => void; // Special edition state callback
 }
 
-export function ProductBuyBox({ product }: ProductBuyBoxProps) {
-  const [colorIndex, setColorIndex] = useState(0);
-  const [size, setSize] = useState<number | null>(null);
+// Helper function to get available sizes for a selected color
+function getAvailableSizesForColor(variants: any[], colorName: string, allSizes: any[]): any[] {
+  const sizesForColor = new Set<string>();
+  
+  variants.forEach((variant) => {
+    // Check if this variant has the selected color
+    const hasColor = variant.attributes.some((attr: any) => 
+      attr.attribute.name === "Color" && 
+      attr.attributeValues.some((val: any) => val.name === colorName)
+    );
+    
+    if (hasColor) {
+      // Extract size from this variant
+      variant.attributes.forEach((attr: any) => {
+        if (attr.attribute.name === "Size" || attr.attribute.name === "Shoes Size") {
+          attr.attributeValues.forEach((val: any) => {
+            sizesForColor.add(val.name);
+          });
+        }
+      });
+    }
+  });
+  
+  // Filter allSizes to only include available sizes, preserving their images
+  return allSizes.filter(size => sizesForColor.has(size.name));
+}
+
+export function ProductBuyBox({ product, productData, colorIndex: controlledColorIndex, onColorChange, onSpecialEditionChange }: ProductBuyBoxProps) {
+  const [internalColorIndex, setInternalColorIndex] = useState(0);
+  const [size, setSize] = useState<string | null>(null);
   const wishlisted = useWishlistHas(product.slug);
 
+  // Use controlled or internal state
+  const colorIndex = controlledColorIndex !== undefined ? controlledColorIndex : internalColorIndex;
+  const setColorIndex = onColorChange || setInternalColorIndex;
+  
   const color = product.colors[colorIndex];
+  
+  // Calculate available sizes for selected color from variants
+  const availableSizes = productData?.product_varient_values 
+    ? getAvailableSizesForColor(productData.product_varient_values, color.name, product.sizes)
+    : product.sizes;
+  
+  // Set default size to first available size if none selected
+  useEffect(() => {
+    if (size === null && availableSizes.length > 0) {
+      setSize(availableSizes[0].name);
+    }
+  }, [availableSizes, size]);
+  
+  // Reset size if it's not available for the selected color
+  useEffect(() => {
+    if (size !== null && !availableSizes.some(s => s.name === size)) {
+      // Try to select the first available size
+      if (availableSizes.length > 0) {
+        setSize(availableSizes[0].name);
+      } else {
+        setSize(null);
+      }
+    }
+  }, [colorIndex, availableSizes, size]);
+  
+  // If we have product data with variants, calculate actual price for selected variant
+  let currentPrice = product.price;
+  let comparePrice = product.compareAtPrice;
+  let isSpecialEdition = false;
+  
+  if (productData?.product_varient_values && color && size) {
+    // Find variant matching selected color and size
+    const variant = productData.product_varient_values.find((v: any) => {
+      const hasColor = v.attributes.some((attr: any) => 
+        attr.attribute.name === "Color" && 
+        attr.attributeValues.some((val: any) => val.name === color.name)
+      );
+      const hasSize = v.attributes.some((attr: any) => 
+        (attr.attribute.name === "Size" || attr.attribute.name === "Shoes Size") && 
+        attr.attributeValues.some((val: any) => val.name === size)
+      );
+      return hasColor && hasSize;
+    });
+    
+    if (variant) {
+      currentPrice = parseFloat(variant.price);
+      isSpecialEdition = variant.isSpecialEdition === true;
+    }
+  }
+  
+  // Notify parent component when special edition status changes
+  useEffect(() => {
+    if (onSpecialEditionChange) {
+      onSpecialEditionChange(isSpecialEdition);
+    }
+  }, [isSpecialEdition, onSpecialEditionChange]);
 
   function handleAddToCart() {
     if (size === null) {
       toast.error("Please select a size first.");
       return;
     }
-    cart.add(product, color.name, color.image, size);
+    
+    // Get the selected size object to check for variant featured image
+    const selectedSize = availableSizes.find(s => s.name === size);
+    
+    // Priority: 1. Variant featured image (size.image), 2. Color image, 3. Product's first image
+    const cartImage = selectedSize?.image || color.image || product.images[0];
+    
+    cart.add(product, color.name, cartImage, size, 1, { unitPrice: currentPrice });
     toast.success(`${product.name} added to your cart.`);
   }
 
@@ -45,12 +143,21 @@ export function ProductBuyBox({ product }: ProductBuyBoxProps) {
   return (
     <div className="space-y-6">
       <div>
-        <span className="editorial-eyebrow">Kathmandu Atelier</span>
+        <span className="editorial-eyebrow">Nyanopan</span>
         <h1 className="mt-2 font-serif text-3xl sm:text-4xl lg:text-[40px] leading-tight font-normal text-foreground">
           {product.name}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">{product.tagline}</p>
-        <p className="mt-4 font-serif text-2xl font-normal text-foreground">{formatPrice(product.price)}</p>
+        {product.description && product.description.length > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">{product.description[0]}</p>
+        )}
+        <div className="mt-4 flex items-center gap-3">
+          <p className="font-serif text-2xl font-normal text-foreground">{formatPrice(currentPrice)}</p>
+          {isSpecialEdition && (
+            <Badge variant="secondary" className="text-[10px] tracking-wider uppercase font-medium">
+              Special Edition
+            </Badge>
+          )}
+        </div>
       </div>
 
       <Separator className="border-border/80" />
@@ -71,19 +178,24 @@ export function ProductBuyBox({ product }: ProductBuyBoxProps) {
               aria-pressed={index === colorIndex}
               aria-label={option.name}
               className={cn(
-                "overflow-hidden rounded-lg border bg-[#faf7f2] p-1 transition-all duration-200",
+                "overflow-hidden rounded-lg border transition-all duration-200",
                 index === colorIndex
                   ? "border-terracotta ring-2 ring-terracotta/80 shadow-xs"
-                  : "border-border/80 hover:border-foreground/40"
+                  : "border-border/80 hover:border-foreground/40",
+                option.image ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={option.image}
-                alt={option.name}
-                className="h-14 w-14 rounded-md object-cover"
-                loading="lazy"
-              />
+              {option.image ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={option.image}
+                  alt={option.name}
+                  className="h-14 w-14 rounded-md object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <span className="text-xs font-medium text-foreground">{option.name}</span>
+              )}
             </button>
           ))}
         </div>
@@ -92,29 +204,42 @@ export function ProductBuyBox({ product }: ProductBuyBoxProps) {
       {/* Size */}
       <div>
         <div className="flex items-center justify-between">
-          <p className="text-xs uppercase tracking-wider font-semibold text-foreground">Size (EU)</p>
-          <SizeGuideDialog />
+          <p className="text-xs uppercase tracking-wider font-semibold text-foreground">
+            Size {size ? <span className="font-normal text-muted-foreground normal-case tracking-normal">&mdash; {size}</span> : null}
+          </p>
         </div>
-        <div className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-7">
-          {product.sizes.map((option) => (
+        <div className="mt-3 flex flex-wrap gap-2.5">
+          {availableSizes.map((option) => (
             <button
-              key={option}
+              key={option.name}
               type="button"
-              onClick={() => setSize(option)}
-              aria-pressed={size === option}
+              onClick={() => setSize(option.name)}
+              aria-pressed={size === option.name}
+              aria-label={`Size ${option.name}`}
               className={cn(
-                "h-10 rounded-md border text-xs font-medium transition-all duration-150",
-                size === option
-                  ? "border-primary bg-primary text-primary-foreground shadow-xs font-semibold"
-                  : "border-border/80 bg-background hover:border-foreground/40 hover:bg-muted/40"
+                "overflow-hidden rounded-lg border transition-all duration-200",
+                size === option.name
+                  ? "border-terracotta ring-2 ring-terracotta/80 shadow-xs"
+                  : "border-border/80 hover:border-foreground/40",
+                option.image ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
               )}
             >
-              {option}
+              {option.image ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={option.image}
+                  alt={`Size ${option.name}`}
+                  className="h-14 w-14 rounded-md object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <span className="text-xs font-medium text-foreground">{option.name}</span>
+              )}
             </button>
           ))}
         </div>
         {size === null && (
-          <p className="mt-2 text-xs text-muted-foreground">Select an EU size to check availability.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Select a size to check availability.</p>
         )}
       </div>
 
@@ -126,7 +251,7 @@ export function ProductBuyBox({ product }: ProductBuyBoxProps) {
             className="flex-1 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm tracking-wide shadow-xs"
             onClick={handleAddToCart}
           >
-            Add to cart &mdash; {formatPrice(product.price)}
+            Add to cart &mdash; {formatPrice(currentPrice)}
           </Button>
           <Button
             size="lg"
@@ -139,83 +264,98 @@ export function ProductBuyBox({ product }: ProductBuyBoxProps) {
             <Heart className={cn("h-5 w-5", wishlisted && "fill-terracotta text-terracotta")} />
           </Button>
         </div>
-        <p className="text-center text-xs text-muted-foreground">
-          Free shipping from Rs. 150 &middot; 30-day fair returns policy
-        </p>
       </div>
 
-      {/* Benefits */}
-      <div className="rounded-lg border border-border/70 bg-[#fbf8f2] p-4.5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-terracotta mb-3">Atelier Standards</p>
-        <ul className="space-y-2.5">
-          {product.benefits.map((benefit) => (
-            <li key={benefit} className="flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed">
-              <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-              <span>{benefit}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-const SIZE_GUIDE = [
-  { size: "35", footLength: "22.5 cm" },
-  { size: "36", footLength: "23.0 cm" },
-  { size: "37", footLength: "23.5 cm" },
-  { size: "38", footLength: "24.0 cm" },
-  { size: "39", footLength: "24.5 cm" },
-  { size: "40", footLength: "25.2 cm" },
-  { size: "41", footLength: "25.8 cm" },
-  { size: "42", footLength: "26.5 cm" },
-  { size: "43", footLength: "27.1 cm" },
-  { size: "44", footLength: "27.8 cm" },
-  { size: "45", footLength: "28.4 cm" },
-  { size: "46", footLength: "29.1 cm" },
-  { size: "47", footLength: "29.7 cm" },
-  { size: "48", footLength: "30.4 cm" },
-];
-
-function SizeGuideDialog() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 text-sm text-primary underline-offset-4 hover:underline"
-        >
-          <Ruler className="h-4 w-4" />
-          Size guide
-        </button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Size guide</DialogTitle>
-        </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          nyanopan slippers are felted on a wide last. Foot lengths are approximate;
-          when in doubt, choose the larger size.
-        </p>
-        <div className="max-h-72 overflow-y-auto rounded-md border">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-muted text-left">
-              <tr>
-                <th className="px-4 py-2 font-medium">EU size</th>
-                <th className="px-4 py-2 font-medium">Foot length</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {SIZE_GUIDE.map((row) => (
-                <tr key={row.size}>
-                  <td className="px-4 py-2">{row.size}</td>
-                  <td className="px-4 py-2 text-muted-foreground">{row.footLength}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Product Details */}
+      {productData && (
+        <div className="rounded-lg border border-border/70 bg-[#fbf8f2] p-4.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-terracotta mb-3">Product Details</p>
+          <div className="space-y-2.5">
+            {productData.category?.name && (
+              <div className="flex items-start gap-2.5 text-xs leading-relaxed">
+                <span className="font-medium text-foreground min-w-[80px]">Category:</span>
+                <span className="text-muted-foreground">{productData.category.name}</span>
+              </div>
+            )}
+            {productData.model?.name && (
+              <div className="flex items-start gap-2.5 text-xs leading-relaxed">
+                <span className="font-medium text-foreground min-w-[80px]">Model:</span>
+                <span className="text-muted-foreground">{productData.model.name}</span>
+              </div>
+            )}
+            {productData.gender && (
+              <div className="flex items-start gap-2.5 text-xs leading-relaxed">
+                <span className="font-medium text-foreground min-w-[80px]">Gender:</span>
+                <span className="text-muted-foreground">{productData.gender}</span>
+              </div>
+            )}
+            {productData.sole_type && (
+              <div className="flex items-start gap-2.5 text-xs leading-relaxed">
+                <span className="font-medium text-foreground min-w-[80px]">Sole Type:</span>
+                <span className="text-muted-foreground">{productData.sole_type}</span>
+              </div>
+            )}
+            {productData.usage_location && (
+              <div className="flex items-start gap-2.5 text-xs leading-relaxed">
+                <span className="font-medium text-foreground min-w-[80px]">Usage:</span>
+                <span className="text-muted-foreground">{productData.usage_location}</span>
+              </div>
+            )}
+            {productData.materials_used && (
+              <div className="flex items-start gap-2.5 text-xs leading-relaxed">
+                <span className="font-medium text-foreground min-w-[80px]">Materials:</span>
+                <span className="text-muted-foreground">{productData.materials_used}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+
+      {/* Key Features */}
+      {productData?.key_features && productData.key_features.length > 0 && (
+        <div className="rounded-lg border border-border/70 bg-[#fbf8f2] p-4.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-terracotta mb-3">Features</p>
+          <div className="space-y-3">
+            {productData.key_features.map((feature: any, index: number) => {
+              // Handle both string format and object format
+              let title = '';
+              let value = '';
+              
+              if (typeof feature === 'string') {
+                // If it's a string, use it as value only
+                value = feature;
+              } else if (feature.title && feature.value) {
+                // If it has both title and value
+                title = feature.title;
+                value = feature.value;
+              } else if (feature.title) {
+                // If it only has title
+                value = feature.title;
+              } else if (feature.value) {
+                // If it only has value
+                value = feature.value;
+              } else {
+                value = JSON.stringify(feature);
+              }
+              
+              return (
+                <div 
+                  key={index} 
+                  className="flex items-start justify-between gap-4 text-xs leading-relaxed border-b border-border/30 pb-3 last:border-0 last:pb-0"
+                >
+                  {title && (
+                    <span className="text-foreground font-medium">{title}</span>
+                  )}
+                  <span className={cn(
+                    "text-muted-foreground text-right",
+                    !title && "w-full"
+                  )}>{value}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

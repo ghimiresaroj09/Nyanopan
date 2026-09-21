@@ -13,25 +13,32 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
+import type { Category } from "@/lib/api/categories";
 
-const NAV_ITEMS = [
-  {
-    href: "/collections/all-slippers",
-    label: "All Slippers",
-    children: [
-      { href: "/collections/high-cut-slippers", label: "High-Cut Slippers" },
-      { href: "/collections/slip-on-slippers", label: "Slip-On Slippers" },
-    ],
-  },
-  { href: "/collections/slippers-women", label: "Women's Slippers" },
-  { href: "/collections/slippers-men", label: "Men's Slippers" },
-  { href: "/collections/slippers-kids", label: "Kids Slippers" },
-  { href: "/our-story", label: "Our Story" },
-  { href: "/sustainability", label: "Sustainability" },
-];
+interface MobileMenuProps {
+  categories: Category[];
+}
 
-export function MobileMenu() {
+export function MobileMenu({ categories }: MobileMenuProps) {
   const pathname = usePathname();
+
+  const NAV_ITEMS = [
+    {
+      href: "/collections",
+      label: "All Products",
+      children: categories.map((category) => ({
+        href: `/collections/${category.slug}`,
+        label: category.name,
+      })),
+    },
+    { href: "/collections/men", label: "Mens Collections" },
+    { href: "/collections/women", label: "Womens Collections" },
+    { href: "/collections/unisex", label: "Unisex Collections" },
+    { href: "/wishlist", label: "My Wishlist" },
+    { href: "/our-story", label: "Our Story" },
+    { href: "/contact", label: "Contact Us" },
+    { href: "/sustainability", label: "Sustainability" },
+  ];
 
   return (
     <Sheet>

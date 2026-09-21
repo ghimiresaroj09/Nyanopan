@@ -33,7 +33,7 @@ export interface OrderLine {
   slug: string;
   name: string;
   colorName: string;
-  size: number;
+  size: string;
   quantity: number;
   unitPrice: number;
   image: string;

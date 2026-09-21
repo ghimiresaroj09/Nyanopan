@@ -6,7 +6,6 @@ import { Minus, Plus, ShoppingBag, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FreeShippingProgress } from "@/components/partials/free-shipping-progress";
 import { cart, useCart, useCartSubtotal } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format";
 
@@ -43,18 +42,19 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            <FreeShippingProgress subtotal={subtotal} className="rounded-lg border border-border/70 bg-[#faf6ee] p-3.5" />
             <ul className="flex-1 divide-y divide-border/60 overflow-y-auto">
               {lines.map((line) => (
                 <li key={line.id} className="flex gap-4 py-4">
                   <Link href={line.url} onClick={() => cart.close()} className="shrink-0">
-                    <Image
-                      src={line.image}
-                      alt={line.name}
-                      width={76}
-                      height={76}
-                      className="rounded-md border border-border/70 bg-[#faf7f2] p-1 object-cover"
-                    />
+                    <div className="relative h-[76px] w-[76px] rounded-md border border-border/70 bg-[#faf7f2] p-1 overflow-hidden">
+                      <Image
+                        src={line.image}
+                        alt={line.name}
+                        fill
+                        sizes="76px"
+                        className="object-cover"
+                      />
+                    </div>
                   </Link>
                   <div className="min-w-0 flex-1">
                     <Link
@@ -65,7 +65,7 @@ export function CartDrawer() {
                       {line.name}
                     </Link>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {line.colorName} / EU {line.size}
+                      {line.colorName} / Size {line.size}
                     </p>
                     <div className="mt-2.5 flex items-center justify-between">
                       <div className="flex items-center rounded-md border border-border/80 bg-background shadow-2xs">
@@ -114,7 +114,7 @@ export function CartDrawer() {
                 <span className="font-serif text-lg font-normal text-foreground">{formatPrice(subtotal)}</span>
               </div>
               <p className="text-[11px] text-muted-foreground/80">
-                EU tax included. Complimentary delivery calculated against threshold.
+                Tax included. Complimentary delivery calculated against threshold.
               </p>
               <div className="grid grid-cols-2 gap-2.5">
                 <Button asChild variant="outline" className="border-border/80 hover:border-terracotta" onClick={() => cart.close()}>

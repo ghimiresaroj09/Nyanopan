@@ -453,7 +453,7 @@ export function Hero() {
                 size="sm"
                 className="bg-[#28221c] text-[#fbf9f5] hover:bg-[#3d362e] shadow-sm rounded-full h-9 sm:h-10 px-4 sm:px-6 text-[11px] sm:text-xs font-medium tracking-wide transition-all"
               >
-                <Link href="/collections/all-slippers" className="inline-flex items-center gap-1.5 sm:gap-2">
+                <Link href="/collections/all" className="inline-flex items-center gap-1.5 sm:gap-2">
                   Shop collection
                   <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Link>

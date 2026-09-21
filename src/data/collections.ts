@@ -23,25 +23,25 @@ export const collections: CollectionDef[] = [
     slug: "slippers-women",
     title: "Women's Slippers",
     description:
-      "Soft wool felt slippers for women, available in sizes EU 35 to EU 42.",
+      "Soft wool felt slippers for women, available in various sizes.",
   },
   {
     slug: "slippers-men",
     title: "Men's Slippers",
     description:
-      "Sturdy wool felt slippers for men, available in sizes EU 40 to EU 48.",
+      "Sturdy wool felt slippers for men, available in various sizes.",
   },
   {
     slug: "slippers-kids",
     title: "Kids Slippers",
     description:
-      "Warm, flexible slippers for children, in sizes EU 25 to EU 33. Machine-free production, natural materials.",
+      "Warm, flexible slippers for children. Machine-free production, natural materials.",
   },
   {
     slug: "baby-booties",
     title: "Baby Booties",
     description:
-      "Soft leather-soled booties for the smallest feet, in sizes EU 17 to EU 24.",
+      "Soft leather-soled booties for the smallest feet.",
   },
 ];
 

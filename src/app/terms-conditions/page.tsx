@@ -1,74 +1,71 @@
 import type { Metadata } from "next";
 
-import { ProsePage, ProseSection } from "@/components/shared/prose-page";
-import { siteConfig } from "@/config/site";
+import { ProsePage } from "@/components/shared/prose-page";
+import { getPolicyByType } from "@/lib/api/policies";
 
-export const metadata: Metadata = {
-  title: "Terms and Conditions",
-  description: "Terms and conditions for the nyanopan storefront.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const policy = await getPolicyByType("TERMS_CONDITIONS");
+  
+  const title = policy?.title || "Terms and Conditions";
+  const description = policy?.content 
+    ? policy.content.replace(/<[^>]*>/g, "").substring(0, 160)
+    : "Terms and conditions for the Nyanopan storefront and online purchases.";
+  
+  return {
+    title,
+    description,
+    keywords: [
+      "terms and conditions",
+      "terms of service",
+      "user agreement",
+      "legal terms",
+      "purchase terms",
+    ],
+    alternates: { canonical: "/terms-conditions" },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: "/terms-conditions",
+      siteName: "Nyanopan",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+    robots: {
+      index: true,
+      follow: false,
+    },
+  };
+}
 
-export default function TermsConditionsPage() {
+export default async function TermsConditionsPage() {
+  const policy = await getPolicyByType("TERMS_CONDITIONS");
+
+  if (!policy) {
+    return (
+      <ProsePage
+        title="Terms and Conditions"
+        description="Terms and conditions information is currently unavailable."
+        updated="14 September 2026"
+      >
+        <p>We're sorry, terms and conditions information is currently unavailable. Please contact us for details.</p>
+      </ProsePage>
+    );
+  }
+
   return (
     <ProsePage
-      title="Terms and Conditions"
+      title={policy.title}
       description="The terms that apply when you use this storefront."
       updated="14 September 2026"
     >
-      <ProseSection title="1. Nature of this storefront">
-        <p>
-          This website is a demonstration storefront for {siteConfig.name}. It
-          exists to show product pages, a cart and a checkout flow. Nothing on
-          this site constitutes a real offer, no orders are accepted, no
-          payments are processed and no products are shipped.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="2. Product information">
-        <p>
-          Product descriptions, prices, sizes and availability shown here are
-          illustrative. Prices are displayed in euros and include VAT. They do
-          not bind anyone to anything.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="3. Use of the site">
-        <p>
-          You may browse the site freely. You may not attempt to disrupt its
-          operation, scrape it at scale, or misrepresent yourself as its
-          operator.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="4. Intellectual property">
-        <p>
-          The layout and text of this storefront are the property of its
-          operator. Photographs are sourced from Unsplash and used under the
-          Unsplash License. Trademarks and product names shown belong to their
-          respective owners.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="5. Liability">
-        <p>
-          The site is provided as is. The operator is not liable for damage
-          resulting from the use of the site or from its unavailability.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="6. Governing law">
-        <p>
-          These terms are governed by Dutch law. Disputes fall under the
-          jurisdiction of the courts of the Netherlands.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="7. Changes">
-        <p>
-          These terms may change when the storefront changes. The date at the
-          top of this page shows when they were last revised.
-        </p>
-      </ProseSection>
+      <div 
+        className="space-y-6 [&_h2]:font-serif [&_h2]:text-2xl [&_h2]:text-foreground [&_h2]:mb-3 [&_p]:text-muted-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_ul]:text-muted-foreground [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1.5 [&_ol]:text-muted-foreground [&_table]:w-full [&_table]:text-sm [&_table]:border [&_table]:rounded-md [&_thead]:bg-muted [&_thead]:text-left [&_th]:px-4 [&_th]:py-2.5 [&_th]:font-medium [&_td]:px-4 [&_td]:py-2.5 [&_tbody]:divide-y [&_a]:underline [&_a]:underline-offset-2 [&_a]:text-foreground hover:[&_a]:text-terracotta [&_strong]:text-foreground [&_strong]:font-medium"
+        dangerouslySetInnerHTML={{ __html: policy.content }}
+      />
     </ProsePage>
   );
 }

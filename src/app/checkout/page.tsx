@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Building2, CheckCircle2, MapPin, ShieldCheck, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,9 @@ import {
   checkoutSchema,
   type CheckoutInput,
 } from "@/lib/schemas/checkout";
-import { getShippingRate } from "@/lib/shipping";
 import { formatPrice } from "@/lib/format";
 import type { OrderDraft } from "@/types/user";
+import { getSiteConfiguration, fallbackConfig } from "@/lib/api/config";
 
 interface FormState {
   fullName: string;
@@ -64,9 +64,21 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("");
 
-  const shipping = getShippingRate(form.cityOrDistrict, subtotal);
-  const total = shipping === null ? null : subtotal + shipping;
+  // Fetch WhatsApp number from configuration
+  useEffect(() => {
+    getSiteConfiguration().then((config) => {
+      const number = config?.whatsapp || fallbackConfig.whatsapp;
+      // Clean the number - remove any non-digits except leading +
+      const cleanNumber = number.replace(/[^\d+]/g, '');
+      setWhatsappNumber(cleanNumber);
+    });
+  }, []);
+
+  // Delivery charges will be discussed via WhatsApp after order confirmation
+  const shipping = 0; // Not calculated at checkout
+  const total = subtotal; // Total shown without delivery charges
 
   if (lines.length === 0) {
     return (
@@ -105,6 +117,35 @@ export default function CheckoutPage() {
     setSubmitting(true);
     const data: CheckoutInput = parsed.data;
 
+    // Build WhatsApp message
+    const orderDetails = lines.map((line) => 
+      `- ${line.name}\n  Color: ${line.colorName} | Size: ${line.size}\n  Qty: ${line.quantity} x ${formatPrice(line.unitPrice)} = ${formatPrice(line.unitPrice * line.quantity)}`
+    ).join('\n\n');
+
+    const message = `*NEW ORDER REQUEST*
+
+*ORDER DETAILS:*
+${orderDetails}
+
+*Order Total:* ${formatPrice(subtotal)}
+*Delivery charges:* To be confirmed
+
+*CUSTOMER INFORMATION:*
+Name: ${data.fullName}
+Email: ${data.email}
+Phone: ${data.phone}
+${data.alternatePhone ? `Alternate Phone: ${data.alternatePhone}\n` : ''}
+*DELIVERY ADDRESS:*
+${data.address}
+${data.landmark ? `Landmark: ${data.landmark}\n` : ''}City/District: ${data.cityOrDistrict}
+${data.companyName ? `\n*COMPANY DETAILS:*\nCompany: ${data.companyName}\n` : ''}${data.panVatNumber ? `PAN/VAT: ${data.panVatNumber}\n` : ''}${data.orderNote ? `\n*ORDER NOTE:*\n${data.orderNote}\n` : ''}
+Thank you for your order!`;
+
+    // Create WhatsApp URL
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+    // Save order locally
     const draft: OrderDraft = {
       userId: "guest",
       email: data.email,
@@ -135,9 +176,12 @@ export default function CheckoutPage() {
 
     const order = placeOrder(draft);
     cart.clear();
+    
+    // Redirect to WhatsApp
     setTimeout(() => {
+      window.open(whatsappUrl, '_blank');
       router.push(`/checkout/success?order=${order.number}`);
-    }, 800);
+    }, 500);
   }
 
   return (
@@ -369,7 +413,7 @@ export default function CheckoutPage() {
             className="w-full h-13 bg-primary hover:bg-primary/90 text-primary-foreground text-base font-medium shadow-md transition-transform active:scale-[0.99]"
             disabled={submitting}
           >
-            {submitting ? "Processing Order..." : `Place Order — ${formatPrice(total ?? subtotal)}`}
+            {submitting ? "Processing Order..." : `Place Order — ${formatPrice(subtotal)}`}
           </Button>
         </form>
 
@@ -380,13 +424,15 @@ export default function CheckoutPage() {
             {lines.map((line) => (
               <li key={line.id} className="flex items-center gap-3 py-3">
                 <div className="relative shrink-0">
-                  <Image
-                    src={line.image}
-                    alt={line.name}
-                    width={56}
-                    height={56}
-                    className="rounded-md border border-border/70 bg-background p-1 object-cover"
-                  />
+                  <div className="relative h-14 w-14 rounded-md border border-border/70 bg-background p-1 overflow-hidden">
+                    <Image
+                      src={line.image}
+                      alt={line.name}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  </div>
                   <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground font-mono">
                     {line.quantity}
                   </span>
@@ -394,7 +440,7 @@ export default function CheckoutPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-foreground">{line.name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {line.colorName} &middot; EU {line.size}
+                    {line.colorName} &middot; Size {line.size}
                   </p>
                 </div>
                 <span className="font-serif text-sm text-foreground">
@@ -412,20 +458,16 @@ export default function CheckoutPage() {
               <span className="font-serif text-sm text-foreground">{formatPrice(subtotal)}</span>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-3">
               <span className="text-muted-foreground">Delivery</span>
-              <span className="font-medium text-foreground">
-                {form.cityOrDistrict
-                  ? shipping === 0
-                    ? "Complimentary"
-                    : formatPrice(shipping as number)
-                  : "Select district"}
+              <span className="font-medium text-foreground text-right text-[11px] leading-tight max-w-[140px]">
+                To be confirmed via WhatsApp
               </span>
             </div>
 
             {total !== null && (
               <div className="flex items-center justify-between border-t border-border/70 pt-3 text-sm">
-                <span className="font-medium text-foreground">Total</span>
+                <span className="font-medium text-foreground">Order Total</span>
                 <span className="font-serif text-lg font-semibold text-primary">{formatPrice(total)}</span>
               </div>
             )}
@@ -437,7 +479,7 @@ export default function CheckoutPage() {
               <span>Cash on Delivery / Direct Bank Transfer</span>
             </div>
             <p>
-              Your order is packed in our Kathmandu workshop and dispatched directly to your doorstep.
+              Your order is packed in our Kathmandu workshop and dispatched directly to your doorstep. Delivery charges will be confirmed via WhatsApp based on your location.
             </p>
           </div>
         </aside>

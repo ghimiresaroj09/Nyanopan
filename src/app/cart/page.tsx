@@ -7,7 +7,6 @@ import { Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Separator } from "@/components/ui/separator";
-import { FreeShippingProgress } from "@/components/partials/free-shipping-progress";
 import { cart, useCart, useCartSubtotal } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format";
 
@@ -47,20 +46,22 @@ export default function CartPage() {
               <li key={line.id} className="flex gap-4 py-5 md:grid md:grid-cols-[1fr_120px_120px_40px] md:items-center">
                 <div className="flex min-w-0 items-center gap-4">
                   <Link href={line.url} className="shrink-0">
-                    <Image
-                      src={line.image}
-                      alt={line.name}
-                      width={80}
-                      height={80}
-                      className="rounded-sm border object-cover"
-                    />
+                    <div className="relative h-20 w-20 rounded-sm border overflow-hidden bg-[#faf7f2]">
+                      <Image
+                        src={line.image}
+                        alt={line.name}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
                   </Link>
                   <div className="min-w-0">
                     <Link href={line.url} className="block text-sm font-medium hover:underline">
                       {line.name}
                     </Link>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {line.colorName} / EU {line.size}
+                      {line.colorName} / Size {line.size}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {formatPrice(line.unitPrice)} each
@@ -108,7 +109,6 @@ export default function CartPage() {
 
         <aside className="rounded-md border bg-card p-6">
           <h2 className="text-sm font-semibold uppercase tracking-wide">Order summary</h2>
-          <FreeShippingProgress subtotal={subtotal} className="mt-4" />
           <div className="mt-4 flex items-center justify-between text-sm">
             <span>Subtotal</span>
             <span className="text-base font-medium">{formatPrice(subtotal)}</span>

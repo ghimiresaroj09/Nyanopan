@@ -9,12 +9,88 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSearchResults } from "@/hooks/use-products";
 import { formatPrice } from "@/lib/format";
+import { useQuery } from "@tanstack/react-query";
+import { getProducts } from "@/lib/api/products";
+import type { Product } from "@/types/product";
 
 interface SearchOverlayProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+// Transform API product to search result format
+function transformToSearchResult(apiProduct: any) {
+  const minPrice = parseFloat(apiProduct.price_range.min_price);
+  const maxPrice = parseFloat(apiProduct.price_range.max_price);
+
+  const genderMap: Record<string, Product["gender"]> = {
+    MEN: "men",
+    WOMEN: "women",
+    UNISEX: "unisex",
+    KIDS: "boys",
+    BABY: "boys",
+  };
+
+  const product: Product = {
+    slug: apiProduct.slug,
+    name: apiProduct.name,
+    tagline: apiProduct.model?.name || "",
+    model: apiProduct.model?.name || "Standard",
+    articleNumber: apiProduct.id.substring(0, 8).toUpperCase(),
+    price: minPrice,
+    compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
+    gender: genderMap[apiProduct.gender] || "unisex",
+    soleType: "leather",
+    shaftHeight: "low",
+    useCase: "indoor",
+    colors: [
+      {
+        name: "Default",
+        value: "default",
+        image: apiProduct.primary_image.url,
+      },
+    ],
+    sizes: [
+      { name: "36", image: "" },
+      { name: "37", image: "" },
+      { name: "38", image: "" },
+      { name: "39", image: "" },
+      { name: "40", image: "" },
+      { name: "41", image: "" },
+      { name: "42", image: "" },
+      { name: "43", image: "" },
+      { name: "44", image: "" },
+      { name: "45", image: "" },
+    ],
+    categories: [apiProduct.category?.slug || "uncategorized"],
+    features: [],
+    benefits: [],
+    description: [],
+    images: [apiProduct.primary_image.url],
+    badge: apiProduct.is_featured ? "Bestseller" : undefined,
+    featured: apiProduct.is_featured,
+    addedAt: apiProduct.created_at,
+    popularity: apiProduct.is_featured ? 100 : 0,
+  };
+
+  return {
+    product,
+    color: product.colors[0],
+  };
+}
+
+function useSearchResults(query: string) {
+  return useQuery({
+    queryKey: ["search", query],
+    queryFn: async () => {
+      if (query.trim().length < 2) return [];
+      const apiProducts = await getProducts({ search: query, limit: 8 });
+      return apiProducts.map(transformToSearchResult);
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: query.trim().length >= 2,
+  });
 }
 
 export function SearchOverlay({ open, onOpenChange }: SearchOverlayProps) {
@@ -30,6 +106,11 @@ export function SearchOverlay({ open, onOpenChange }: SearchOverlayProps) {
   function goToProduct(url: string) {
     onOpenChange(false);
     router.push(url);
+  }
+  
+  function searchAll() {
+    onOpenChange(false);
+    router.push(`/collections/all?search=${encodeURIComponent(deferredQuery)}`);
   }
 
   return (
@@ -48,6 +129,11 @@ export function SearchOverlay({ open, onOpenChange }: SearchOverlayProps) {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && deferredQuery.trim().length >= 2) {
+                  searchAll();
+                }
+              }}
               placeholder="Search slippers, models, colours"
               className="h-12 pl-9 text-base"
               aria-label="Search products"
@@ -107,13 +193,13 @@ export function SearchOverlay({ open, onOpenChange }: SearchOverlayProps) {
 
               {deferredQuery.trim().length >= 2 && !isFetching && (
                 <div className="pt-2 text-sm">
-                  <Link
-                    href={`/collections/all-slippers`}
-                    onClick={() => onOpenChange(false)}
+                  <button
+                    type="button"
+                    onClick={searchAll}
                     className="text-primary underline-offset-4 hover:underline"
                   >
-                    View the full collection
-                  </Link>
+                    View all results for &quot;{deferredQuery}&quot;
+                  </button>
                 </div>
               )}
             </div>

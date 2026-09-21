@@ -36,14 +36,14 @@ const sizeCsv = z
 const sort = z
   .enum([
     "featured",
-    "best-selling",
     "a-z",
     "z-a",
     "price-low-high",
     "price-high-low",
     "newest",
+    "oldest",
   ])
-  .catch("featured");
+  .optional();
 
 export const searchParamsSchema = z.object({
   color: csv,

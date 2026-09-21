@@ -4,48 +4,55 @@ import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/providers";
-import { siteConfig } from "@/config/site";
+import { WebSiteSchema } from "@/components/seo/website-schema";
+import { getSiteConfig } from "@/config/site";
+import { getCategories } from "@/lib/api/categories";
 
-const SITE_TITLE = `${siteConfig.name} | ${siteConfig.tagline}`;
+export async function generateMetadata(): Promise<Metadata> {
+  const siteConfig = await getSiteConfig();
+  const SITE_TITLE = `${siteConfig.name} | ${siteConfig.tagline}`;
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
-  title: {
-    default: SITE_TITLE,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    type: "website",
-    siteName: siteConfig.name,
-    title: SITE_TITLE,
+  return {
+    metadataBase: new URL(siteConfig.url),
+    title: {
+      default: SITE_TITLE,
+      template: `%s | ${siteConfig.name}`,
+    },
     description: siteConfig.description,
-    url: siteConfig.url,
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: `${siteConfig.name}: ${siteConfig.tagline}`,
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: siteConfig.description,
-    images: ["/opengraph-image"],
-  },
-};
+    alternates: {
+      canonical: "/",
+    },
+    openGraph: {
+      type: "website",
+      siteName: siteConfig.name,
+      title: SITE_TITLE,
+      description: siteConfig.description,
+      url: siteConfig.url,
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: `${siteConfig.name}: ${siteConfig.tagline}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: SITE_TITLE,
+      description: siteConfig.description,
+      images: ["/opengraph-image"],
+    },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categories = await getCategories();
+
   return (
     /*
      * suppressHydrationWarning on the root elements: browser extensions
@@ -55,6 +62,9 @@ export default function RootLayout({
      * mismatches deeper in the tree still warn.
      */
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <WebSiteSchema />
+      </head>
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
         <a
           href="#main-content"
@@ -63,7 +73,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <Providers>
-          <Header />
+          <Header categories={categories} />
           <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
             {children}
           </main>

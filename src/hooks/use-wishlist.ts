@@ -3,9 +3,10 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 /**
- * Wishlist. Kept in reactive application state.
+ * Wishlist. Kept in reactive application state and persisted to localStorage.
  */
 
+const STORAGE_KEY = "nyanopan-wishlist";
 const EMPTY: string[] = [];
 
 let slugs: string[] = [];
@@ -14,6 +15,15 @@ const listeners = new Set<() => void>();
 function setSlugs(next: string[]) {
   slugs = next;
   listeners.forEach((listener) => listener());
+  
+  // Persist to localStorage
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch (error) {
+      console.error("Failed to save wishlist to localStorage:", error);
+    }
+  }
 }
 
 function subscribe(listener: () => void) {
@@ -51,6 +61,20 @@ export const wishlist = {
   },
 
   hydrate() {
+    // Load from localStorage on client
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            slugs = parsed;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load wishlist from localStorage:", error);
+      }
+    }
     listeners.forEach((listener) => listener());
   },
 };
@@ -66,4 +90,9 @@ export function useWishlistSlugs(): string[] {
 export function useWishlistHas(slug: string): boolean {
   const select = useCallback(() => wishlist.has(slug), [slug]);
   return useSyncExternalStore(wishlist.subscribe, select, () => false);
+}
+
+export function useWishlistCount(): number {
+  const select = useCallback(() => wishlist.getSnapshot().length, []);
+  return useSyncExternalStore(wishlist.subscribe, select, () => 0);
 }

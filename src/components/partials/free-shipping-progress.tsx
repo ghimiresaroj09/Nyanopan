@@ -24,7 +24,7 @@ export function FreeShippingProgress({ subtotal, className }: FreeShippingProgre
           </p>
         ) : (
           <p className="font-semibold text-primary">
-            ✓ Your order qualifies for free EU shipping
+            ✓ Your order qualifies for free shipping within Nepal
           </p>
         )}
         <span className="text-[11px] font-mono text-muted-foreground">{Math.round(percent)}%</span>

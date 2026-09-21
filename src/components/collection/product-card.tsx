@@ -45,28 +45,35 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             </Badge>
           )}
           <div className="p-3">
-            <Image
-              src={primary}
-              alt={product.name}
-              width={600}
-              height={600}
-              priority={priority}
-              className="aspect-square w-full rounded-md object-cover transition-opacity duration-500 group-hover:opacity-0"
-            />
-            {secondary && (
+            <div className="relative aspect-square w-full overflow-hidden rounded-md bg-[#f5f1e8]">
               <Image
-                src={secondary}
-                alt=""
-                aria-hidden="true"
+                src={primary}
+                alt={product.name}
                 width={600}
                 height={600}
-                loading="lazy"
-                className="absolute inset-0 aspect-square w-full p-3 rounded-md object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                priority={priority}
+                className={cn(
+                  "h-full w-full object-cover transition-all duration-500",
+                  secondary 
+                    ? "group-hover:opacity-0" 
+                    : "group-hover:scale-105"
+                )}
               />
-            )}
+              {secondary && (
+                <Image
+                  src={secondary}
+                  alt=""
+                  aria-hidden="true"
+                  width={600}
+                  height={600}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                />
+              )}
+            </div>
           </div>
         </div>
-        <div className="mt-3.5 space-y-1.5">
+        <div className="mt-3.5">
           <div className="flex items-start justify-between gap-3">
             <h3 className="text-[13.5px] font-medium leading-snug text-foreground transition-colors group-hover:text-terracotta">
               {product.name}
@@ -74,21 +81,6 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             <p className="whitespace-nowrap font-serif text-[15px] font-normal text-foreground">
               {formatPrice(product.price)}
             </p>
-          </div>
-          <div className="flex items-center gap-1.5" aria-label="Available colours">
-            {product.colors.slice(0, 5).map((color) => (
-              <span
-                key={color.value}
-                className="block h-2.5 w-2.5 rounded-full border border-black/15 shadow-2xs"
-                style={{ backgroundColor: swatchColor(color.value) }}
-                title={color.name}
-              />
-            ))}
-            {product.colors.length > 5 && (
-              <span className="text-[10px] text-muted-foreground/80 font-medium">
-                +{product.colors.length - 5}
-              </span>
-            )}
           </div>
         </div>
       </Link>
@@ -127,25 +119,4 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       />
     </div>
   );
-}
-
-function swatchColor(value: string): string {
-  switch (value) {
-    case "grey":
-      return "#9ca3af";
-    case "blue":
-      return "#1e3a5f";
-    case "green":
-      return "#5a6b4b";
-    case "natural":
-      return "#d9cdb8";
-    case "pink":
-      return "#e8b4bc";
-    case "mauve":
-      return "#b49aa0";
-    case "multi":
-      return "#c7a27b";
-    default:
-      return "#d1d5db";
-  }
 }

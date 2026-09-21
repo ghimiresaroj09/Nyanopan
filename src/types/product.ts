@@ -12,6 +12,13 @@ export interface ProductColor {
   image: string;
 }
 
+export interface ProductSize {
+  /** Display name, e.g. "M", "L", "36", "37". */
+  name: string;
+  /** Image shown for this size variant (optional). */
+  image: string;
+}
+
 export interface ProductFeature {
   label: string;
   value: string;
@@ -30,7 +37,7 @@ export interface Product {
   shaftHeight: ShaftHeight;
   useCase: UseCase;
   colors: ProductColor[];
-  sizes: number[];
+  sizes: ProductSize[];
   /** Collection slugs this product belongs to. */
   categories: string[];
   features: ProductFeature[];
@@ -50,17 +57,17 @@ export interface ProductFilters {
   soles: SoleType[];
   models: string[];
   genders: Gender[];
-  sizes: number[];
+  sizes: string[];
 }
 
 export type SortOption =
   | "featured"
-  | "best-selling"
   | "a-z"
   | "z-a"
   | "price-low-high"
   | "price-high-low"
-  | "newest";
+  | "newest"
+  | "oldest";
 
 export const EMPTY_FILTERS: ProductFilters = {
   colors: [],

@@ -16,17 +16,48 @@ interface NewsletterSignupProps {
 export function NewsletterSignup({ className }: NewsletterSignupProps) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    
+    // Validate email
     const parsed = newsletterSchema.safeParse({ email });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Enter a valid email address.");
       return;
     }
+    
     setError(null);
-    setEmail("");
-    toast.success("You are subscribed. Welcome aboard.");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.message || "Failed to subscribe. Please try again.");
+        toast.error(data.message || "Subscription failed");
+        return;
+      }
+
+      // Success
+      setEmail("");
+      toast.success("You are subscribed. Welcome aboard!");
+    } catch (err) {
+      console.error("Subscription error:", err);
+      setError("An error occurred. Please try again.");
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -62,9 +93,10 @@ export function NewsletterSignup({ className }: NewsletterSignupProps) {
             </div>
             <Button
               type="submit"
-              className="h-12 bg-primary px-7 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-colors shadow-2xs"
+              disabled={isSubmitting}
+              className="h-12 bg-primary px-7 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-colors shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Subscribe
+              {isSubmitting ? "Subscribing..." : "Subscribe"}
             </Button>
           </div>
           {error && (

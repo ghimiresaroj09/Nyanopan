@@ -11,9 +11,9 @@ import type { Product } from "@/types/product";
 
 const STALE_TIME = 5 * 60 * 1000;
 
-export function useProducts(initialData?: Product[]) {
+export function useProducts(initialData?: Product[], queryKey?: string[]) {
   return useQuery({
-    queryKey: ["products"],
+    queryKey: queryKey || ["products"],
     queryFn: fetchProducts,
     staleTime: STALE_TIME,
     initialData,

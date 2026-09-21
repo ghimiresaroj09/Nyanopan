@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import type { Crumb } from "@/components/shared/breadcrumbs";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 
 interface PageHeaderProps {
   title: string;
-  description?: string;
+  description?: string | ReactNode;
   crumbs?: Crumb[];
 }
 
@@ -18,9 +19,9 @@ export function PageHeader({ title, description, crumbs }: PageHeaderProps) {
         )}
         <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal tracking-tight text-foreground">{title}</h1>
         {description && (
-          <p className="mt-3.5 max-w-2xl text-sm sm:text-base leading-relaxed text-muted-foreground">
-            {description}
-          </p>
+          <div className="mt-3.5 max-w-2xl text-sm sm:text-base leading-relaxed text-muted-foreground [&_span]:inline">
+            {typeof description === "string" ? <p>{description}</p> : description}
+          </div>
         )}
       </div>
     </div>
