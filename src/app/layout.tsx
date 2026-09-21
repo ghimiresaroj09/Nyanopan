@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/providers";
 import { WebSiteSchema } from "@/components/seo/website-schema";
+import { OrganizationSchema } from "@/components/seo/organization-schema";
 import { getSiteConfig } from "@/config/site";
 import { getCategories } from "@/lib/api/categories";
 
@@ -64,6 +65,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <WebSiteSchema />
+        <OrganizationSchema />
       </head>
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
         <a

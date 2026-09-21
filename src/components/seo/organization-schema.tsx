@@ -1,9 +1,14 @@
 import { getSiteConfig } from "@/config/site";
-import { getSiteConfiguration, fallbackConfig } from "@/lib/api/config";
+import { getSiteConfiguration } from "@/lib/api/config";
 
 export async function OrganizationSchema() {
   const siteConfig = await getSiteConfig();
-  const apiConfig = await getSiteConfiguration() || fallbackConfig;
+  const apiConfig = await getSiteConfiguration();
+  
+  // Build social media links array from API config
+  const sameAs = apiConfig?.social 
+    ? Object.values(apiConfig.social).filter(url => url && url !== "https://facebook.com" && url !== "https://instagram.com")
+    : [];
   
   const schema = {
     "@context": "https://schema.org",
@@ -13,27 +18,17 @@ export async function OrganizationSchema() {
     url: siteConfig.url,
     logo: `${siteConfig.url}/brand/logo-cloud.png`,
     description: siteConfig.description,
-    email: apiConfig.email,
-    telephone: apiConfig.phone,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Boudha, Kathmandu",
-      addressCountry: "NP",
-      streetAddress: apiConfig.address,
-    },
-    sameAs: [
-      apiConfig.social.facebook,
-      apiConfig.social.instagram,
-      apiConfig.social.tiktok,
-      apiConfig.social.pinterest,
-    ].filter(Boolean),
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: apiConfig.phone,
-      contactType: "Customer Service",
-      email: apiConfig.email,
-      availableLanguage: ["English", "Nepali"],
-    },
+    email: apiConfig?.email || siteConfig.contactEmail,
+    ...(sameAs.length > 0 && { sameAs }),
+    ...(apiConfig?.phone && {
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: apiConfig.phone,
+        contactType: "Customer Service",
+        areaServed: "NP",
+        availableLanguage: ["en", "ne"],
+      },
+    }),
   };
 
   return (
