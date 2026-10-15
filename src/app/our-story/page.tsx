@@ -110,12 +110,27 @@ export default async function OurStoryPage() {
       )}
 
       {/* Our Makers Section */}
-      {makersData && (
+      {makersData && makersData.team_members && makersData.team_members.length > 0 ? (
         <OurMakersSection 
           title={makersData.title}
           description={makersData.description}
           teamMembers={makersData.team_members}
         />
+      ) : (
+        <section className="border-t border-border/70 bg-[#f7f2e8]/80 py-16 md:py-24">
+          <div className="container-page">
+            <div className="max-w-2xl">
+              <span className="editorial-eyebrow">The Hands Behind Nyanopan</span>
+              <h2 className="mt-3 font-serif text-3xl md:text-4xl text-foreground">Our Makers</h2>
+              <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                Our atelier is small by choice. Every single craftsperson can felt, shape, block and stitch a pair from raw fleece to completed sole. Each slipper carries the stitched signature initials of the artisan who shaped it.
+              </p>
+            </div>
+            <div className="mt-12">
+              <p className="text-sm text-muted-foreground text-center">Loading maker profiles...</p>
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Section 2 - Signed by the maker */}

@@ -39,7 +39,7 @@ export function OurMakersSection({ className, title, description, teamMembers }:
   };
 
   return (
-    <section className={cn("border-t border-border/70 bg-[#f7f2e8]/80 py-18 md:py-24", className)}>
+    <section className={cn("border-t border-border/70 bg-[#f7f2e8]/80 py-16 md:py-24", className)}>
       <div className="container-page">
         <div className="max-w-2xl">
           <span className="editorial-eyebrow">The Hands Behind Nyanopan</span>
