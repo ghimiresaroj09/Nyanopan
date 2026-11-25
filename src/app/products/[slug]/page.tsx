@@ -28,22 +28,24 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   
   // Get price range
   const prices = productData.product_varient_values.map((v) => v.price);
-  const minPrice = Math.min(...prices);
+  const minPrice = prices.length ? Math.min(...prices) : 0;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const maxPrice = Math.max(...prices);
+  const maxPrice = prices.length ? Math.max(...prices) : 0;
   
   // Generate rich description
-  const description = productData.description || 
-    `Handcrafted ${productData.model.name} from Kathmandu. ${productData.category.name}. Made from 100% natural wool by fair trade artisans in Nepal.`;
+  const modelName = productData.model?.name || "wool footwear";
+  const categoryName = productData.category?.name || "Handcrafted goods";
+  const description = productData.description ||
+    `Handcrafted ${modelName} from Kathmandu. ${categoryName}. Made from 100% natural wool by fair trade artisans in Nepal.`;
   
   // Get primary image
   const primaryImage = productData.feature_image?.url;
   
   // Generate dynamic keywords based on product attributes
   const keywords = generateProductKeywords({
-    categorySlug: productData.category.slug,
+    categorySlug: productData.category?.slug || "uncategorized",
     productName: productData.name,
-    modelName: productData.model.name,
+    modelName,
     gender: productData.gender?.toLowerCase() || "unisex",
     isHandmade: true,
   });
@@ -104,11 +106,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   
   // Get min price for schema
   const prices = productData.product_varient_values.map((v) => v.price);
-  const minPrice = Math.min(...prices);
+  const minPrice = prices.length ? Math.min(...prices) : 0;
   
   const breadcrumbItems = [
     { label: "Home", href: "/" },
-    { label: productData.category.name, href: `/collections/${productData.category.slug}` },
+    ...(productData.category ? [{ label: productData.category.name, href: `/collections/${productData.category.slug}` }] : []),
     { label: product.name },
   ];
   
@@ -122,12 +124,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ProductSchema
         product={{
           name: productData.name,
-          description: productData.description || `Handcrafted ${productData.model.name} from Kathmandu`,
+          description: productData.description || `Handcrafted ${productData.model?.name || "wool footwear"} from Kathmandu`,
           image: productData.feature_image?.url,
           slug: productData.slug,
           sku: productData.id,
           brand: "Nyanopan",
-          category: productData.category.name,
+          category: productData.category?.name || "Handcrafted goods",
           price: minPrice,
           currency: "NPR",
           availability: "InStock",
@@ -146,11 +148,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
 
         <div className="border-t">
-          <YouMightLike categorySlug={productData.category.slug} excludeSlug={slug} />
+          {productData.category?.slug && <YouMightLike categorySlug={productData.category.slug} excludeSlug={slug} />}
         </div>
 
         <div className="border-t">
-          <RelatedProducts model={productData.model.id} excludeSlug={slug} />
+          {productData.model?.id && <RelatedProducts model={productData.model.id} excludeSlug={slug} />}
         </div>
 
         <div className="border-t">
@@ -165,8 +167,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 function transformProductDetail(apiProduct: APIProduct): Product {
   // Get min and max price from variants
   const prices = apiProduct.product_varient_values.map((v) => v.price);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
+  const minPrice = prices.length ? Math.min(...prices) : 0;
+  const maxPrice = prices.length ? Math.max(...prices) : 0;
   
   // Map gender
   const genderMap: Record<string, Product["gender"]> = {

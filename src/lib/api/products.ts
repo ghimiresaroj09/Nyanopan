@@ -17,8 +17,8 @@ export interface ProductCategory {
 
 export interface ProductModel {
   object: string;
-  id: string;
-  name: string;
+  id: string | null;
+  name: string | null;
 }
 
 export interface ProductPriceRange {
@@ -59,8 +59,8 @@ export interface Product {
   id: string;
   name: string;
   slug: string;
-  gender: "MEN" | "WOMEN" | "UNISEX" | "KIDS" | "BABY";
-  category: ProductCategory;
+  gender: "MEN" | "WOMEN" | "UNISEX" | "KIDS" | "BABY" | null;
+  category: ProductCategory | null;
   model: ProductModel;
   is_featured: boolean;
   price_range: ProductPriceRange;
@@ -71,7 +71,7 @@ export interface Product {
 export interface ProductDetail extends Omit<Product, 'primary_image' | 'price_range'> {
   description: string;
   usage_location: "INSIDE" | "OUTSIDE" | "BOTH";
-  sole_type: "LEATHER" | "RUBBER";
+  sole_type: "LEATHER" | "RUBBER" | null;
   attributes: ProductAttribute[];
   feature_image: ProductImage;
   product_images: ProductImage[];
