@@ -12,6 +12,8 @@ export interface CartLine {
   image: string;
   colorName: string;
   size: string;
+  optionSelections?: string[];
+  variantId?: string;
   quantity: number;
   unitPrice: number;
 }
@@ -82,7 +84,7 @@ export const cart = {
     colorImage: string,
     size: string,
     quantity = 1,
-    opts: { openDrawer?: boolean; unitPrice?: number } = {}
+    opts: { openDrawer?: boolean; unitPrice?: number; optionSelections?: string[]; variantId?: string } = {}
   ) {
     const id = lineId(product.slug, colorName, size);
     const existing = state.lines.find((l) => l.id === id);
@@ -100,6 +102,8 @@ export const cart = {
             image: colorImage,
             colorName,
             size,
+            optionSelections: opts.optionSelections,
+            variantId: opts.variantId,
             quantity,
             unitPrice,
           },

@@ -61,7 +61,7 @@ export default function CartPage() {
                       {line.name}
                     </Link>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {line.colorName} / Size {line.size}
+                      {line.optionSelections?.join(" / ") || `${line.colorName} / Size ${line.size}`}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {formatPrice(line.unitPrice)} each

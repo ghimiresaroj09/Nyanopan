@@ -34,29 +34,37 @@ interface VariantAttribute {
 }
 
 // Transform API variants into structured attributes
-function extractVariantAttributes(variants: any[]): VariantAttribute[] {
+function extractVariantAttributes(variants: any[], productAttributes: any[] = []): VariantAttribute[] {
   const attributeMap = new Map<string, Set<string>>();
   const attributeImages = new Map<string, Map<string, string>>();
 
-  variants.forEach((variant) => {
-    variant.attributes.forEach((attr: any) => {
-      const attrName = attr.attribute.name;
-      
-      if (!attributeMap.has(attrName)) {
-        attributeMap.set(attrName, new Set());
-        attributeImages.set(attrName, new Map());
-      }
+  const addAttribute = (attr: any) => {
+    const attrName = attr.attribute?.name;
+    if (!attrName) return;
 
-      attr.attributeValues.forEach((val: any) => {
-        attributeMap.get(attrName)!.add(val.name);
-        
-        // Store featured image if available
-        if (val.featured_image) {
-          attributeImages.get(attrName)!.set(val.name, val.featured_image);
-        }
-      });
+    if (!attributeMap.has(attrName)) {
+      attributeMap.set(attrName, new Set());
+      attributeImages.set(attrName, new Map());
+    }
+
+    (attr.attributeValues ?? []).forEach((val: any) => {
+      if (!val.name) return;
+      attributeMap.get(attrName)!.add(val.name);
+
+      // Store the featured image if available.
+      const image = val.featureImage?.url ?? val.featured_image?.url ?? val.featured_image ?? val.image?.url ?? val.image;
+      if (typeof image === "string" && image) {
+        attributeImages.get(attrName)!.set(val.name, image);
+      } else if (val.additionalImages?.[0]?.url && !attributeImages.get(attrName)!.has(val.name)) {
+        attributeImages.get(attrName)!.set(val.name, val.additionalImages[0].url);
+      }
     });
+  };
+
+  variants.forEach((variant) => {
+    (variant.attributes ?? []).forEach(addAttribute);
   });
+  productAttributes.forEach(addAttribute);
 
   const attributes: VariantAttribute[] = [];
   
@@ -138,7 +146,7 @@ export function ProductQuickAddDialog({
         
         // Extract variant attributes from API
         if (data.product_varient_values?.length > 0) {
-          const attributes = extractVariantAttributes(data.product_varient_values);
+          const attributes = extractVariantAttributes(data.product_varient_values, data.attributes ?? []);
           setVariantAttributes(attributes);
           
           // Find the variant that matches the product card price
@@ -178,10 +186,14 @@ export function ProductQuickAddDialog({
   const currentPrice = currentVariant ? parseFloat(currentVariant.price) : product.price;
   const isSpecialEdition = currentVariant?.isSpecialEdition === true;
 
-  // Get display image: Priority: 1. Current variant featured image, 2. First variant image, 3. Product color image
-  const primaryImage = currentVariant?.featured_image || 
-    productData?.product_varient_values?.[0]?.featured_image || 
-    product.colors[0]?.image ||
+  // Prefer the selected variant image, then its selected option image, then the product feature image.
+  const variantImageValue = currentVariant?.featured_image ?? currentVariant?.feature_image ?? currentVariant?.featureImage ?? currentVariant?.image;
+  const variantImage = typeof variantImageValue === "string" ? variantImageValue : variantImageValue?.url;
+  const selectedOptionImage = variantAttributes
+    .map((attribute) => attribute.values.find((value) => value.name === selections[attribute.name])?.image)
+    .find(Boolean);
+  const primaryImage = variantImage || selectedOptionImage ||
+    productData?.feature_image?.url ||
     product.images?.[0] ||
     '';
 
@@ -190,24 +202,34 @@ export function ProductQuickAddDialog({
   }
 
   function handleAddToCart() {
-    // Find color and size from selections
-    const colorName = selections.Color || selections.Colour || "";
-    const sizeName = selections.Size || selections["Shoes Size"] || "";
-    
-    if (!colorName || !sizeName) {
+    const requiredAttributes = variantAttributes.map((attribute) => attribute.name);
+    if (requiredAttributes.some((name) => !selections[name])) {
       toast.error("Please select all options.");
       return;
     }
 
-    // Priority: 1. Variant featured image (currentVariant), 2. Color image, 3. Primary image fallback
-    const variantFeaturedImage = currentVariant?.featured_image;
-    const colorAttr = variantAttributes.find(a => a.name === "Color" || a.name === "Colour");
-    const colorValue = colorAttr?.values.find(v => v.name === colorName);
-    const colorImage = colorValue?.image;
-    
-    const cartImage = variantFeaturedImage || colorImage || primaryImage;
+    if (productData?.product_varient_values?.length && !currentVariant) {
+      toast.error("That combination is unavailable. Please choose another option.");
+      return;
+    }
 
-    cart.add(product, colorName, cartImage, sizeName, 1, { openDrawer: false, unitPrice: currentPrice });
+    // Prefer the selected variant image, then a selected option image, then the product feature image.
+    const variantFeaturedValue = currentVariant?.featured_image ?? currentVariant?.feature_image ?? currentVariant?.featureImage ?? currentVariant?.image;
+    const variantFeaturedImage = typeof variantFeaturedValue === "string" ? variantFeaturedValue : variantFeaturedValue?.url;
+    const selectedOptionImage = variantAttributes
+      .map((attribute) => attribute.values.find((value) => value.name === selections[attribute.name])?.image)
+      .find(Boolean);
+    const cartImage = variantFeaturedImage || selectedOptionImage || productData?.feature_image?.url || primaryImage;
+    const selectionLines = variantAttributes.map((attribute) => `${attribute.name}: ${selections[attribute.name]}`);
+    const colorName = selections.Color || selections.Colour || selectionLines.join(", ") || "Default";
+    const sizeName = selections.Size || selections["Shoes Size"] || currentVariant?.name || "Default";
+
+    cart.add(product, colorName, cartImage, sizeName, 1, {
+      openDrawer: false,
+      unitPrice: currentPrice,
+      optionSelections: selectionLines,
+      variantId: currentVariant?.id,
+    });
     toast.success(`${product.name} added to your cart.`);
     onOpenChange(false);
   }

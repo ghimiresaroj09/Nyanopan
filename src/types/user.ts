@@ -34,6 +34,7 @@ export interface OrderLine {
   name: string;
   colorName: string;
   size: string;
+  optionSelections?: string[];
   quantity: number;
   unitPrice: number;
   image: string;

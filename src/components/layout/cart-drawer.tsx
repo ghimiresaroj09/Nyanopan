@@ -65,7 +65,7 @@ export function CartDrawer() {
                       {line.name}
                     </Link>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {line.colorName} / Size {line.size}
+                      {line.optionSelections?.join(" / ") || `${line.colorName} / Size ${line.size}`}
                     </p>
                     <div className="mt-2.5 flex items-center justify-between">
                       <div className="flex items-center rounded-md border border-border/80 bg-background shadow-2xs">

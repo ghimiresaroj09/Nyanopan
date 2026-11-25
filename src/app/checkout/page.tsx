@@ -119,7 +119,7 @@ export default function CheckoutPage() {
 
     // Build WhatsApp message
     const orderDetails = lines.map((line) => 
-      `- ${line.name}\n  Color: ${line.colorName} | Size: ${line.size}\n  Qty: ${line.quantity} x ${formatPrice(line.unitPrice)} = ${formatPrice(line.unitPrice * line.quantity)}`
+      `- ${line.name}\n  ${line.optionSelections?.join(" | ") || `Color: ${line.colorName} | Size: ${line.size}`}\n  Qty: ${line.quantity} x ${formatPrice(line.unitPrice)} = ${formatPrice(line.unitPrice * line.quantity)}`
     ).join('\n\n');
 
     const message = `*NEW ORDER REQUEST*
@@ -154,6 +154,7 @@ Thank you for your order!`;
         name: line.name,
         colorName: line.colorName,
         size: line.size,
+        optionSelections: line.optionSelections,
         quantity: line.quantity,
         unitPrice: line.unitPrice,
         image: line.image,
@@ -440,7 +441,7 @@ Thank you for your order!`;
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-foreground">{line.name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {line.colorName} &middot; Size {line.size}
+                    {line.optionSelections?.join(" · ") || `${line.colorName} · Size ${line.size}`}
                   </p>
                 </div>
                 <span className="font-serif text-sm text-foreground">

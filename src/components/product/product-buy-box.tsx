@@ -12,102 +12,101 @@ import { useWishlistHas, wishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ProductBuyBoxProps {
   product: Product;
   productData?: any; // Optional API product data with variants
-  colorIndex?: number; // Controlled color index
-  onColorChange?: (index: number) => void; // Color change handler
   onSpecialEditionChange?: (isSpecial: boolean) => void; // Special edition state callback
+  onVariantImageChange?: (image: string | null) => void;
 }
 
-// Helper function to get available sizes for a selected color
-function getAvailableSizesForColor(variants: any[], colorName: string, allSizes: any[]): any[] {
-  const sizesForColor = new Set<string>();
-  
-  variants.forEach((variant) => {
-    // Check if this variant has the selected color
-    const hasColor = variant.attributes.some((attr: any) => 
-      attr.attribute.name === "Color" && 
-      attr.attributeValues.some((val: any) => val.name === colorName)
-    );
-    
-    if (hasColor) {
-      // Extract size from this variant
-      variant.attributes.forEach((attr: any) => {
-        if (attr.attribute.name === "Size" || attr.attribute.name === "Shoes Size") {
-          attr.attributeValues.forEach((val: any) => {
-            sizesForColor.add(val.name);
-          });
-        }
-      });
-    }
+interface ProductOptionGroup {
+  id: string;
+  name: string;
+  values: string[];
+  images: Record<string, string>;
+}
+
+function getVariantAttributes(variant: any): Array<{ id: string; name: string; values: string[]; images: Record<string, string> }> {
+  return (variant?.attributes ?? []).flatMap((attribute: any) => {
+    const name = attribute.attribute?.name;
+    if (!name) return [];
+    const attributeValues = attribute.attributeValues ?? [];
+    const values = attributeValues.map((value: any) => value.name).filter(Boolean);
+    const images = Object.fromEntries(attributeValues.flatMap((value: any) => {
+      const image = value.featureImage?.url ?? value.featuredImage?.url ?? value.image?.url ?? value.image;
+      return value.name && typeof image === "string" && image ? [[value.name, image]] : [];
+    }));
+    return values.length ? [{ id: attribute.attribute.id ?? name, name, values, images }] : [];
   });
-  
-  // Filter allSizes to only include available sizes, preserving their images
-  return allSizes.filter(size => sizesForColor.has(size.name));
 }
 
-export function ProductBuyBox({ product, productData, colorIndex: controlledColorIndex, onColorChange, onSpecialEditionChange }: ProductBuyBoxProps) {
-  const [internalColorIndex, setInternalColorIndex] = useState(0);
-  const [size, setSize] = useState<string | null>(null);
+function getVariantImage(variant: any): string | undefined {
+  const image = variant?.featured_image ?? variant?.feature_image ?? variant?.featureImage ?? variant?.image;
+  const imageUrl = typeof image === "string" ? image : image?.url;
+  if (imageUrl) return imageUrl;
+  return variant?.images?.find((item: any) => typeof item?.url === "string")?.url;
+}
+
+export function ProductBuyBox({ product, productData, onSpecialEditionChange, onVariantImageChange }: ProductBuyBoxProps) {
+  const variants = (productData?.product_varient_values ?? []).filter((variant: any) => variant.isActive !== false);
+  const optionGroups: ProductOptionGroup[] = [];
+  const groupMap = new Map<string, ProductOptionGroup>();
+
+  variants.forEach((variant: any) => {
+    getVariantAttributes(variant).forEach(({ id, name, values, images }) => {
+      const group = groupMap.get(id) ?? { id, name, values: [], images: {} };
+      values.forEach((value) => {
+        if (!group.values.includes(value)) group.values.push(value);
+      });
+      Object.assign(group.images, images);
+      groupMap.set(id, group);
+    });
+  });
+  (productData?.attributes ?? []).forEach((attribute: any) => {
+    const id = attribute.attribute?.id ?? attribute.attribute?.name;
+    const group = id ? groupMap.get(id) : undefined;
+    if (!group) return;
+    (attribute.attributeValues ?? []).forEach((value: any) => {
+      const image = value.featureImage?.url ?? value.featuredImage?.url ?? value.image?.url ?? value.image;
+      if (value.name && typeof image === "string" && image && !group.images[value.name]) {
+        group.images[value.name] = image;
+      }
+    });
+  });
+  optionGroups.push(...groupMap.values());
+
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const wishlisted = useWishlistHas(product.slug);
 
-  // Use controlled or internal state
-  const colorIndex = controlledColorIndex !== undefined ? controlledColorIndex : internalColorIndex;
-  const setColorIndex = onColorChange || setInternalColorIndex;
-  
-  const color = product.colors[colorIndex];
-  
-  // Calculate available sizes for selected color from variants
-  const availableSizes = productData?.product_varient_values 
-    ? getAvailableSizesForColor(productData.product_varient_values, color.name, product.sizes)
-    : product.sizes;
-  
-  // Set default size to first available size if none selected
-  useEffect(() => {
-    if (size === null && availableSizes.length > 0) {
-      setSize(availableSizes[0].name);
-    }
-  }, [availableSizes, size]);
-  
-  // Reset size if it's not available for the selected color
-  useEffect(() => {
-    if (size !== null && !availableSizes.some(s => s.name === size)) {
-      // Try to select the first available size
-      if (availableSizes.length > 0) {
-        setSize(availableSizes[0].name);
-      } else {
-        setSize(null);
-      }
-    }
-  }, [colorIndex, availableSizes, size]);
-  
-  // If we have product data with variants, calculate actual price for selected variant
+  const matchingVariants = variants.filter((variant: any) =>
+    getVariantAttributes(variant).every(({ id, name, values }) => {
+      const groupId = optionGroups.find((group) => group.id === id || group.name === name)?.id;
+      const selected = groupId ? selectedOptions[groupId] : undefined;
+      return !selected || values.includes(selected);
+    })
+  );
+  const selectedVariant = matchingVariants.find((variant: any) =>
+    optionGroups.every((group) => {
+      const selected = selectedOptions[group.id];
+      if (!selected) return true;
+      const variantAttribute = getVariantAttributes(variant).find((attribute) => attribute.id === group.id);
+      return variantAttribute?.values.includes(selected) ?? false;
+    })
+  );
+
   let currentPrice = product.price;
-  let comparePrice = product.compareAtPrice;
-  let isSpecialEdition = false;
-  
-  if (productData?.product_varient_values && color && size) {
-    // Find variant matching selected color and size
-    const variant = productData.product_varient_values.find((v: any) => {
-      const hasColor = v.attributes.some((attr: any) => 
-        attr.attribute.name === "Color" && 
-        attr.attributeValues.some((val: any) => val.name === color.name)
-      );
-      const hasSize = v.attributes.some((attr: any) => 
-        (attr.attribute.name === "Size" || attr.attribute.name === "Shoes Size") && 
-        attr.attributeValues.some((val: any) => val.name === size)
-      );
-      return hasColor && hasSize;
-    });
-    
-    if (variant) {
-      currentPrice = parseFloat(variant.price);
-      isSpecialEdition = variant.isSpecialEdition === true;
-    }
-  }
-  
+  if (selectedVariant) currentPrice = parseFloat(selectedVariant.price);
+  const isSpecialEdition = selectedVariant?.isSpecialEdition === true;
+
   // Notify parent component when special edition status changes
   useEffect(() => {
     if (onSpecialEditionChange) {
@@ -116,18 +115,31 @@ export function ProductBuyBox({ product, productData, colorIndex: controlledColo
   }, [isSpecialEdition, onSpecialEditionChange]);
 
   function handleAddToCart() {
-    if (size === null) {
-      toast.error("Please select a size first.");
+    if (optionGroups.some((group) => !selectedOptions[group.id])) {
+      toast.error("Please select all product options first.");
       return;
     }
-    
-    // Get the selected size object to check for variant featured image
-    const selectedSize = availableSizes.find(s => s.name === size);
-    
-    // Priority: 1. Variant featured image (size.image), 2. Color image, 3. Product's first image
-    const cartImage = selectedSize?.image || color.image || product.images[0];
-    
-    cart.add(product, color.name, cartImage, size, 1, { unitPrice: currentPrice });
+
+    if (variants.length > 0 && !selectedVariant) {
+      toast.error("That combination is unavailable. Please choose another option.");
+      return;
+    }
+
+    const selections = optionGroups.map((group) => `${group.name}: ${selectedOptions[group.id]}`);
+    const color = optionGroups.find((group) => group.name.toLowerCase() === "color");
+    const size = optionGroups.find((group) => /size/i.test(group.name));
+    const cartColor = color ? selectedOptions[color.id] : selections.join(", ") || "Default";
+    const cartSize = size ? selectedOptions[size.id] : selectedVariant?.name ?? "Default";
+    const selectedOptionImage = optionGroups
+      .map((group) => group.images[selectedOptions[group.id]])
+      .find(Boolean);
+    const cartImage = getVariantImage(selectedVariant) ?? selectedOptionImage ?? productData?.feature_image?.url ?? product.images[0] ?? "";
+
+    cart.add(product, cartColor, cartImage, cartSize, 1, {
+      unitPrice: currentPrice,
+      optionSelections: selections,
+      variantId: selectedVariant?.id,
+    });
     toast.success(`${product.name} added to your cart.`);
   }
 
@@ -162,85 +174,136 @@ export function ProductBuyBox({ product, productData, colorIndex: controlledColo
 
       <Separator className="border-border/80" />
 
-      {/* Colour */}
-      <div>
-        <div className="flex items-center justify-between">
-          <p className="text-xs uppercase tracking-wider font-semibold text-foreground">
-            Colour &mdash; <span className="font-normal text-muted-foreground normal-case tracking-normal">{color.name}</span>
-          </p>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2.5">
-          {product.colors.map((option, index) => (
+      {optionGroups.map((group) => {
+        const availableValues = group.values.filter((value) =>
+          variants.some((variant: any) =>
+            getVariantAttributes(variant).some((attribute) => {
+              if (attribute.id !== group.id || !attribute.values.includes(value)) return false;
+              return getVariantAttributes(variant).every((variantOption) => {
+                if (variantOption.id === group.id) return true;
+                const selected = selectedOptions[variantOption.id];
+                return !selected || variantOption.values.includes(selected);
+              });
+            })
+          )
+        );
+        return <div key={group.id}>
+          <div className="flex items-center justify-between">
+            <p className="text-xs uppercase tracking-wider font-semibold text-foreground">
+              {group.name}{selectedOptions[group.id] ? <span className="font-normal text-muted-foreground normal-case tracking-normal">&mdash; {selectedOptions[group.id]}</span> : null}
+            </p>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2.5">
+          {availableValues.map((value) => (
             <button
-              key={option.value}
+              key={value}
               type="button"
-              onClick={() => setColorIndex(index)}
-              aria-pressed={index === colorIndex}
-              aria-label={option.name}
-              className={cn(
-                "overflow-hidden rounded-lg border transition-all duration-200",
-                index === colorIndex
-                  ? "border-terracotta ring-2 ring-terracotta/80 shadow-xs"
-                  : "border-border/80 hover:border-foreground/40",
-                option.image ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
-              )}
-            >
-              {option.image ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={option.image}
-                  alt={option.name}
-                  className="h-14 w-14 rounded-md object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <span className="text-xs font-medium text-foreground">{option.name}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+              onClick={() => {
+                const next = { ...selectedOptions, [group.id]: value };
+                Object.entries(next).forEach(([selectedGroupId, selectedValue]) => {
+                  if (selectedGroupId === group.id) return;
+                  const compatible = variants.some((variant: any) =>
+                    Object.entries(next).every(([optionId, selected]) =>
+                      getVariantAttributes(variant).some((attribute) =>
+                        attribute.id === optionId && attribute.values.includes(selected)
+                      )
+                    ) && next[selectedGroupId] === selectedValue
+                  );
+                  if (!compatible) delete next[selectedGroupId];
+                });
 
-      {/* Size */}
-      <div>
-        <div className="flex items-center justify-between">
-          <p className="text-xs uppercase tracking-wider font-semibold text-foreground">
-            Size {size ? <span className="font-normal text-muted-foreground normal-case tracking-normal">&mdash; {size}</span> : null}
-          </p>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2.5">
-          {availableSizes.map((option) => (
-            <button
-              key={option.name}
-              type="button"
-              onClick={() => setSize(option.name)}
-              aria-pressed={size === option.name}
-              aria-label={`Size ${option.name}`}
+                const imageVariant = variants.find((variant: any) =>
+                  getVariantAttributes(variant).every((attribute) => {
+                    const selected = next[attribute.id];
+                    return !selected || attribute.values.includes(selected);
+                  }) && Object.entries(next).every(([optionId, selected]) =>
+                    getVariantAttributes(variant).some((attribute) =>
+                      attribute.id === optionId && attribute.values.includes(selected)
+                    )
+                  )
+                );
+                onVariantImageChange?.(
+                  getVariantImage(imageVariant) ??
+                  group.images[value] ??
+                  productData?.feature_image?.url ??
+                  product.images[0] ??
+                  null
+                );
+                setSelectedOptions(next);
+              }}
+              aria-pressed={selectedOptions[group.id] === value}
+              aria-label={`${group.name} ${value}`}
               className={cn(
                 "overflow-hidden rounded-lg border transition-all duration-200",
-                size === option.name
+                selectedOptions[group.id] === value
                   ? "border-terracotta ring-2 ring-terracotta/80 shadow-xs"
                   : "border-border/80 hover:border-foreground/40",
-                option.image ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
+              group.images[value] ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
               )}
             >
-              {option.image ? (
+              {group.images[value] ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
-                  src={option.image}
-                  alt={`Size ${option.name}`}
+                  src={group.images[value]}
+                  alt={value}
+                  title={value}
                   className="h-14 w-14 rounded-md object-cover"
                   loading="lazy"
                 />
               ) : (
-                <span className="text-xs font-medium text-foreground">{option.name}</span>
+                <span className="text-xs font-medium text-foreground">{value}</span>
               )}
             </button>
           ))}
-        </div>
-        {size === null && (
-          <p className="mt-2 text-xs text-muted-foreground">Select a size to check availability.</p>
-        )}
+          </div>
+        </div>;
+      })}
+
+      <div className="flex justify-end">
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="text-xs font-medium text-terracotta underline underline-offset-4 hover:text-terracotta/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+            >
+              Size guide
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md p-5 sm:p-6">
+            <DialogHeader>
+              <DialogTitle className="font-serif text-2xl font-normal">Size guide</DialogTitle>
+              <DialogDescription>
+                Use your foot length to find the closest fit. Measurements are approximate.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-2 overflow-hidden rounded-lg border border-border/70">
+              <table className="w-full text-sm">
+                <thead className="bg-[#fbf8f2] text-left text-xs uppercase tracking-wider text-foreground">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 font-semibold">EU size</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Foot length</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/70">
+                  {[
+                    ["36", "22.5 cm"], ["37", "23 cm"], ["38", "24 cm"],
+                    ["39", "24.5 cm"], ["40", "25 cm"], ["41", "26 cm"],
+                    ["42", "26.5 cm"], ["43", "27.5 cm"], ["44", "28 cm"],
+                    ["45", "29 cm"],
+                  ].map(([eu, length]) => (
+                    <tr key={eu} className="text-muted-foreground">
+                      <th scope="row" className="px-4 py-2.5 text-left font-medium text-foreground">{eu}</th>
+                      <td className="px-4 py-2.5">{length}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Measure from the back of your heel to the tip of your longest toe while standing. If you are between sizes, choose the larger size.
+            </p>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Add to cart and wishlist */}

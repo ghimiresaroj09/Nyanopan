@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -10,10 +10,20 @@ interface ProductGalleryProps {
   images: string[];
   alt: string;
   badge?: string;
+  featuredImage?: string | null;
 }
 
-export function ProductGallery({ images, alt, badge }: ProductGalleryProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+export function ProductGallery({ images, alt, badge, featuredImage }: ProductGalleryProps) {
+  const galleryImages = Array.from(new Set([...images, ...(featuredImage ? [featuredImage] : [])]));
+  const [activeImage, setActiveImage] = useState(galleryImages[0] ?? "");
+
+  useEffect(() => {
+    if (featuredImage) {
+      setActiveImage(featuredImage);
+    }
+  }, [featuredImage]);
+
+  const activeIndex = galleryImages.indexOf(activeImage);
 
   return (
     <div className="space-y-4">
@@ -26,27 +36,27 @@ export function ProductGallery({ images, alt, badge }: ProductGalleryProps) {
             {badge}
           </Badge>
         )}
-        <Image
-          src={images[activeIndex]}
+        {activeImage && <Image
+          src={activeImage}
           alt={alt}
           width={1000}
           height={1000}
           priority
           sizes="(min-width: 1024px) 50vw, 100vw"
           className="aspect-square w-full rounded-lg object-cover"
-        />
+        />}
       </div>
 
-      {images.length > 1 && (
+      {galleryImages.length > 1 && (
         <div className="grid grid-cols-5 gap-3" role="tablist" aria-label="Product images">
-          {images.map((image, index) => (
+          {galleryImages.map((image, index) => (
             <button
               key={image}
               type="button"
               role="tab"
               aria-selected={activeIndex === index}
-              aria-label={`Show image ${index + 1} of ${images.length}`}
-              onClick={() => setActiveIndex(index)}
+              aria-label={`Show image ${index + 1} of ${galleryImages.length}`}
+              onClick={() => setActiveImage(image)}
               className={cn(
                 "overflow-hidden rounded-lg border bg-[#faf7f2] p-1.5 transition-all duration-200",
                 activeIndex === index
