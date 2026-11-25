@@ -24,7 +24,7 @@ export function MobileMenu({ categories }: MobileMenuProps) {
 
   const NAV_ITEMS = [
     {
-      href: "/collections",
+      href: "/collections/all",
       label: "All Products",
       children: categories.map((category) => ({
         href: `/collections/${category.slug}`,

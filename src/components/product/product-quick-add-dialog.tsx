@@ -95,14 +95,14 @@ function getAvailableValues(
     const matchesSelections = Object.entries(currentSelections).every(([selAttrName, selValue]) => {
       if (selAttrName === attributeName) return true;
       
-      return variant.attributes.some((attr: any) =>
+      return (variant.attributes ?? []).some((attr: any) =>
         attr.attribute.name === selAttrName &&
         attr.attributeValues.some((val: any) => val.name === selValue)
       );
     });
 
     if (matchesSelections) {
-      variant.attributes.forEach((attr: any) => {
+      (variant.attributes ?? []).forEach((attr: any) => {
         if (attr.attribute.name === attributeName) {
           attr.attributeValues.forEach((val: any) => {
             available.add(val.name);
@@ -128,6 +128,9 @@ export function ProductQuickAddDialog({
   const [loading, setLoading] = useState(false);
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [variantAttributes, setVariantAttributes] = useState<VariantAttribute[]>([]);
+  const variants = (productData?.product_varient_values ?? []).filter(
+    (variant: any) => variant.isActive !== false
+  );
 
   // Fetch product data when dialog opens
   useEffect(() => {
@@ -138,26 +141,30 @@ export function ProductQuickAddDialog({
       
       getProduct(product.slug).then((data) => {
         if (!data) {
-          setLoading(false);
+          setProductData(null);
+          setVariantAttributes([]);
           return;
         }
         
         setProductData(data);
         
         // Extract variant attributes from API
-        if (data.product_varient_values?.length > 0) {
-          const attributes = extractVariantAttributes(data.product_varient_values, data.attributes ?? []);
+        const activeVariants = (data.product_varient_values ?? []).filter(
+          (variant: any) => variant.isActive !== false
+        );
+        if (activeVariants.length > 0) {
+          const attributes = extractVariantAttributes(activeVariants, data.attributes ?? []);
           setVariantAttributes(attributes);
           
           // Find the variant that matches the product card price
           const cardPrice = product.price;
-          const matchingVariant = data.product_varient_values.find(
+          const matchingVariant = activeVariants.find(
             (v: any) => Math.abs(parseFloat(v.price) - cardPrice) < 0.01
-          ) || data.product_varient_values[0]; // Fallback to first variant
+          ) || activeVariants[0]; // Fallback to first active variant
           
           // Build selections from the matching variant
           const initialSelections: Record<string, string> = {};
-          matchingVariant.attributes.forEach((attr: any) => {
+          (matchingVariant.attributes ?? []).forEach((attr: any) => {
             const attrName = attr.attribute.name;
             const firstValue = attr.attributeValues[0]?.name;
             if (firstValue) {
@@ -166,17 +173,24 @@ export function ProductQuickAddDialog({
           });
           
           setSelections(initialSelections);
+        } else {
+          setVariantAttributes([]);
+          setSelections({});
         }
-        
+      }).catch(() => {
+        setProductData(null);
+        setVariantAttributes([]);
+        setSelections({});
+      }).finally(() => {
         setLoading(false);
       });
     }
   }, [open, product.slug, product.price]);
 
   // Find current variant based on selections
-  const currentVariant = productData?.product_varient_values?.find((v: any) => {
+  const currentVariant = variants.find((v: any) => {
     return Object.entries(selections).every(([attrName, selectedValue]) => {
-      return v.attributes.some((attr: any) =>
+      return (v.attributes ?? []).some((attr: any) =>
         attr.attribute.name === attrName &&
         attr.attributeValues.some((val: any) => val.name === selectedValue)
       );
@@ -277,7 +291,7 @@ export function ProductQuickAddDialog({
               variantAttributes.map((attribute) => {
                 const selectedValue = selections[attribute.name];
                 const availableValues = getAvailableValues(
-                  productData.product_varient_values,
+                  variants,
                   attribute.name,
                   selections
                 );
@@ -311,7 +325,7 @@ export function ProductQuickAddDialog({
                               isSelected
                                 ? "border-terracotta ring-2 ring-terracotta/80 shadow-xs"
                                 : "border-border/80 hover:border-foreground/40",
-                              !isAvailable && "opacity-40 cursor-not-allowed",
+                            !isAvailable && "opacity-40 cursor-not-allowed",
                               value.image ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
                             )}
                           >

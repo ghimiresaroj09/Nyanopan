@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     categorySlug: productData.category.slug,
     productName: productData.name,
     modelName: productData.model.name,
-    gender: productData.gender.toLowerCase(),
+    gender: productData.gender?.toLowerCase() || "unisex",
     isHandmade: true,
   });
   
