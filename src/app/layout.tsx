@@ -8,6 +8,8 @@ import { WebSiteSchema } from "@/components/seo/website-schema";
 import { OrganizationSchema } from "@/components/seo/organization-schema";
 import { getSiteConfig } from "@/config/site";
 import { getCategories } from "@/lib/api/categories";
+import { getSiteConfiguration } from "@/lib/api/config";
+import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteConfig = await getSiteConfig();
@@ -53,6 +55,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const categories = await getCategories();
+  const siteConfiguration = await getSiteConfiguration();
 
   return (
     /*
@@ -80,6 +83,7 @@ export default async function RootLayout({
             {children}
           </main>
           <Footer />
+          <WhatsAppButton phone={siteConfiguration?.whatsapp ?? "9841234567"} />
         </Providers>
       </body>
     </html>

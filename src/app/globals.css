@@ -105,6 +105,20 @@
   }
 }
 
+@keyframes whatsapp-float-pulse {
+  0%, 100% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18), 0 0 0 0 rgba(37, 211, 102, 0.38); }
+  50% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18), 0 0 0 10px rgba(37, 211, 102, 0); }
+}
+
+.whatsapp-float {
+  animation: whatsapp-float-pulse 2.2s ease-out infinite;
+}
+
+.whatsapp-float:hover,
+.whatsapp-float:focus-visible {
+  animation-play-state: paused;
+}
+
 /* Shared page gutter. */
 .container-page {
   margin-inline: auto;
