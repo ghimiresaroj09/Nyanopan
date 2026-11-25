@@ -40,7 +40,7 @@ function transformToSearchResult(apiProduct: any) {
     articleNumber: apiProduct.id.substring(0, 8).toUpperCase(),
     price: minPrice,
     compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
-    gender: genderMap[apiProduct.gender] || "unisex",
+    gender: genderMap[apiProduct.gender || ""] || "unisex",
     soleType: "leather",
     shaftHeight: "low",
     useCase: "indoor",

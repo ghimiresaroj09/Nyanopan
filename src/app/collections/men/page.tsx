@@ -35,7 +35,7 @@ function transformProduct(apiProduct: APIProduct): Product {
     articleNumber: apiProduct.id.substring(0, 8).toUpperCase(),
     price: minPrice,
     compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
-    gender: genderMap[apiProduct.gender] || "men",
+    gender: genderMap[apiProduct.gender || ""] || "men",
     soleType: "leather",
     shaftHeight: "low",
     useCase: "indoor",

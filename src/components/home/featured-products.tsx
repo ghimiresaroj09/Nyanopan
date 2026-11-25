@@ -13,12 +13,12 @@ function transformProduct(apiProduct: APIProduct): Product {
   return {
     slug: apiProduct.slug,
     name: apiProduct.name,
-    tagline: apiProduct.model.name,
-    model: apiProduct.model.name,
+    tagline: apiProduct.model?.name || "",
+    model: apiProduct.model?.name || "Standard",
     articleNumber: apiProduct.id.substring(0, 8),
     price: minPrice,
     compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
-    gender: apiProduct.gender.toLowerCase() as Product["gender"],
+    gender: (apiProduct.gender || "UNISEX").toLowerCase() as Product["gender"],
     soleType: "leather", // Default, could be enhanced with API data
     shaftHeight: "low", // Default, could be enhanced with API data
     useCase: "indoor", // Default, could be enhanced with API data
@@ -41,7 +41,7 @@ function transformProduct(apiProduct: APIProduct): Product {
       { name: "44", image: "" },
       { name: "45", image: "" },
     ], // Default sizes
-    categories: [apiProduct.category.slug],
+    categories: [apiProduct.category?.slug || "uncategorized"],
     features: [],
     benefits: [],
     description: [],
