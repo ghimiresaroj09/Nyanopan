@@ -174,19 +174,23 @@ export function ProductBuyBox({ product, productData, onSpecialEditionChange, on
 
       <Separator className="border-border/80" />
 
-      {optionGroups.map((group) => {
-        const availableValues = group.values.filter((value) =>
-          variants.some((variant: any) =>
-            getVariantAttributes(variant).some((attribute) => {
-              if (attribute.id !== group.id || !attribute.values.includes(value)) return false;
-              return getVariantAttributes(variant).every((variantOption) => {
-                if (variantOption.id === group.id) return true;
-                const selected = selectedOptions[variantOption.id];
-                return !selected || variantOption.values.includes(selected);
-              });
-            })
-          )
-        );
+      {optionGroups.map((group, groupIndex) => {
+        const availableValues = new Set(group.values.filter((value) =>
+          variants.some((variant: any) => {
+            const variantAttributes = getVariantAttributes(variant);
+            const matchesValue = variantAttributes.some((attribute) =>
+              attribute.id === group.id && attribute.values.includes(value)
+            );
+            const matchesPriorSelections = optionGroups.slice(0, groupIndex).every((priorGroup) => {
+              const selectedValue = selectedOptions[priorGroup.id];
+              if (!selectedValue) return true;
+              return variantAttributes.some((attribute) =>
+                attribute.id === priorGroup.id && attribute.values.includes(selectedValue)
+              );
+            });
+            return matchesValue && matchesPriorSelections;
+          })
+        ));
         return <div key={group.id}>
           <div className="flex items-center justify-between">
             <p className="text-xs uppercase tracking-wider font-semibold text-foreground">
@@ -194,23 +198,34 @@ export function ProductBuyBox({ product, productData, onSpecialEditionChange, on
             </p>
           </div>
           <div className="mt-3 flex flex-wrap gap-2.5">
-          {availableValues.map((value) => (
+          {group.values.map((value) => {
+            const isAvailable = availableValues.has(value);
+            return (
             <button
               key={value}
               type="button"
+              disabled={!isAvailable}
               onClick={() => {
                 const next = { ...selectedOptions, [group.id]: value };
-                Object.entries(next).forEach(([selectedGroupId, selectedValue]) => {
-                  if (selectedGroupId === group.id) return;
-                  const compatible = variants.some((variant: any) =>
-                    Object.entries(next).every(([optionId, selected]) =>
-                      getVariantAttributes(variant).some((attribute) =>
-                        attribute.id === optionId && attribute.values.includes(selected)
-                      )
-                    ) && next[selectedGroupId] === selectedValue
-                  );
-                  if (!compatible) delete next[selectedGroupId];
-                });
+                const nextVariant = variants.find((variant: any) =>
+                  getVariantAttributes(variant).some((attribute) =>
+                    attribute.id === group.id && attribute.values.includes(value)
+                  ) && optionGroups.slice(0, groupIndex + 1).every((selectedGroup) => {
+                    const selected = next[selectedGroup.id];
+                    return !selected || getVariantAttributes(variant).some((attribute) =>
+                      attribute.id === selectedGroup.id && attribute.values.includes(selected)
+                    );
+                  })
+                );
+                if (nextVariant) {
+                  const nextAttributes = getVariantAttributes(nextVariant);
+                  optionGroups.slice(groupIndex + 1).forEach((laterGroup) => {
+                    const selected = next[laterGroup.id];
+                    if (selected && !nextAttributes.some((attribute) =>
+                      attribute.id === laterGroup.id && attribute.values.includes(selected)
+                    )) delete next[laterGroup.id];
+                  });
+                }
 
                 const imageVariant = variants.find((variant: any) =>
                   getVariantAttributes(variant).every((attribute) => {
@@ -238,6 +253,7 @@ export function ProductBuyBox({ product, productData, onSpecialEditionChange, on
                 selectedOptions[group.id] === value
                   ? "border-terracotta ring-2 ring-terracotta/80 shadow-xs"
                   : "border-border/80 hover:border-foreground/40",
+                !isAvailable && "cursor-not-allowed opacity-40",
               group.images[value] ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
               )}
             >
@@ -254,7 +270,8 @@ export function ProductBuyBox({ product, productData, onSpecialEditionChange, on
                 <span className="text-xs font-medium text-foreground">{value}</span>
               )}
             </button>
-          ))}
+          );
+          })}
           </div>
         </div>;
       })}

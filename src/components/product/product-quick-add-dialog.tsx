@@ -86,30 +86,32 @@ function extractVariantAttributes(variants: any[], productAttributes: any[] = []
 function getAvailableValues(
   variants: any[],
   attributeName: string,
-  currentSelections: Record<string, string>
+  priorSelections: Record<string, string>,
 ): string[] {
   const available = new Set<string>();
 
   variants.forEach((variant) => {
-    // Check if this variant matches all current selections (except the attribute we're filtering)
-    const matchesSelections = Object.entries(currentSelections).every(([selAttrName, selValue]) => {
-      if (selAttrName === attributeName) return true;
-      
-      return (variant.attributes ?? []).some((attr: any) =>
-        attr.attribute.name === selAttrName &&
-        attr.attributeValues.some((val: any) => val.name === selValue)
-      );
-    });
+    const variantAttributes = variant.attributes ?? [];
+    const hasAttributeValue = variantAttributes.some((attribute: any) =>
+      attribute.attribute.name === attributeName
+    );
+    if (!hasAttributeValue) return;
 
-    if (matchesSelections) {
-      (variant.attributes ?? []).forEach((attr: any) => {
-        if (attr.attribute.name === attributeName) {
-          attr.attributeValues.forEach((val: any) => {
-            available.add(val.name);
-          });
-        }
-      });
-    }
+    const matchesPriorSelections = Object.entries(priorSelections).every(([selectedName, selectedValue]) => {
+      const selectedAttribute = variantAttributes.find((attribute: any) =>
+        attribute.attribute.name === selectedName
+      );
+      return !selectedAttribute || selectedAttribute.attributeValues.some((option: any) => option.name === selectedValue);
+    });
+    if (!matchesPriorSelections) return;
+
+    (variant.attributes ?? []).forEach((attr: any) => {
+      if (attr.attribute.name === attributeName) {
+        attr.attributeValues.forEach((val: any) => {
+          available.add(val.name);
+        });
+      }
+    });
   });
 
   return Array.from(available);
@@ -156,23 +158,8 @@ export function ProductQuickAddDialog({
           const attributes = extractVariantAttributes(activeVariants, data.attributes ?? []);
           setVariantAttributes(attributes);
           
-          // Find the variant that matches the product card price
-          const cardPrice = product.price;
-          const matchingVariant = activeVariants.find(
-            (v: any) => Math.abs(parseFloat(v.price) - cardPrice) < 0.01
-          ) || activeVariants[0]; // Fallback to first active variant
-          
-          // Build selections from the matching variant
-          const initialSelections: Record<string, string> = {};
-          (matchingVariant.attributes ?? []).forEach((attr: any) => {
-            const attrName = attr.attribute.name;
-            const firstValue = attr.attributeValues[0]?.name;
-            if (firstValue) {
-              initialSelections[attrName] = firstValue;
-            }
-          });
-          
-          setSelections(initialSelections);
+          // Let shoppers choose each attribute explicitly in the dialog.
+          setSelections({});
         } else {
           setVariantAttributes([]);
           setSelections({});
@@ -189,7 +176,8 @@ export function ProductQuickAddDialog({
 
   // Find current variant based on selections
   const currentVariant = variants.find((v: any) => {
-    return Object.entries(selections).every(([attrName, selectedValue]) => {
+    const selectedEntries = Object.entries(selections);
+    return selectedEntries.length === variantAttributes.length && selectedEntries.every(([attrName, selectedValue]) => {
       return (v.attributes ?? []).some((attr: any) =>
         attr.attribute.name === attrName &&
         attr.attributeValues.some((val: any) => val.name === selectedValue)
@@ -212,7 +200,32 @@ export function ProductQuickAddDialog({
     '';
 
   function handleAttributeChange(attributeName: string, value: string) {
-    setSelections(prev => ({ ...prev, [attributeName]: value }));
+    setSelections((previous) => {
+      const next = { ...previous, [attributeName]: value };
+      const changedIndex = variantAttributes.findIndex((attribute) => attribute.name === attributeName);
+      const compatibleVariant = variants.find((variant: any) =>
+        (variant.attributes ?? []).some((attribute: any) =>
+          attribute.attribute.name === attributeName &&
+          attribute.attributeValues.some((option: any) => option.name === value)
+        ) && variantAttributes.slice(0, changedIndex + 1).every((selectedAttribute) => {
+          const selectedValue = next[selectedAttribute.name];
+          return !selectedValue || (variant.attributes ?? []).some((attribute: any) =>
+            attribute.attribute.name === selectedAttribute.name &&
+            attribute.attributeValues.some((option: any) => option.name === selectedValue)
+          );
+        })
+      );
+      if (compatibleVariant) {
+        variantAttributes.slice(changedIndex + 1).forEach((laterAttribute) => {
+          const selectedValue = next[laterAttribute.name];
+          if (selectedValue && !(compatibleVariant.attributes ?? []).some((attribute: any) =>
+            attribute.attribute.name === laterAttribute.name &&
+            attribute.attributeValues.some((option: any) => option.name === selectedValue)
+          )) delete next[laterAttribute.name];
+        });
+      }
+      return next;
+    });
   }
 
   function handleAddToCart() {
@@ -288,12 +301,18 @@ export function ProductQuickAddDialog({
             {loading ? (
               <div className="text-sm text-muted-foreground">Loading variants...</div>
             ) : (
-              variantAttributes.map((attribute) => {
+              variantAttributes.map((attribute, attributeIndex) => {
                 const selectedValue = selections[attribute.name];
+                const priorSelections = Object.fromEntries(
+                  variantAttributes
+                    .slice(0, attributeIndex)
+                    .filter((priorAttribute) => selections[priorAttribute.name])
+                    .map((priorAttribute) => [priorAttribute.name, selections[priorAttribute.name]])
+                );
                 const availableValues = getAvailableValues(
                   variants,
                   attribute.name,
-                  selections
+                  priorSelections
                 );
 
                 return (
@@ -308,8 +327,7 @@ export function ProductQuickAddDialog({
                       )}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {attribute.values.map((value) => {
-                        const isAvailable = availableValues.includes(value.name);
+                      {attribute.values.filter((value) => availableValues.includes(value.name)).map((value) => {
                         const isSelected = selectedValue === value.name;
 
                         return (
@@ -317,7 +335,6 @@ export function ProductQuickAddDialog({
                             key={value.name}
                             type="button"
                             onClick={() => handleAttributeChange(attribute.name, value.name)}
-                            disabled={!isAvailable}
                             aria-pressed={isSelected}
                             aria-label={`${attribute.name}: ${value.name}`}
                             className={cn(
@@ -325,7 +342,6 @@ export function ProductQuickAddDialog({
                               isSelected
                                 ? "border-terracotta ring-2 ring-terracotta/80 shadow-xs"
                                 : "border-border/80 hover:border-foreground/40",
-                            !isAvailable && "opacity-40 cursor-not-allowed",
                               value.image ? "bg-[#faf7f2] p-1" : "bg-background px-3 py-2"
                             )}
                           >

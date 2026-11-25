@@ -32,6 +32,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Keep dev server chunks separate from production builds. Running `next build`
+  // while `next dev` is active must not overwrite the dev server's module graph.
+  distDir: isDev ? ".next-dev" : ".next",
   images: {
     remotePatterns: [
       {
