@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { CollectionBrowser } from "@/components/collection/collection-browser";
 import { PageHeader } from "@/components/shared/page-header";
-import { getProducts, type Product as APIProduct } from "@/lib/api/products";
+import { getProductsPage, type Product as APIProduct } from "@/lib/api/products";
 import { mapSortToAPI } from "@/lib/api/sort-mapper";
 import type { Product, SortOption } from "@/types/product";
 
@@ -117,7 +117,7 @@ export default async function AllProductsPage({ searchParams }: AllProductsPageP
   console.log("🔍 All Products Page - API params:", { search, ordering: apiSortOption, is_featured: isFeatured, gender, sole_type: apiSoleType, usage_location: usageLocation, model, min_price: minPrice, max_price: maxPrice, ...attributeFilters });
   
   // Fetch products from API with filters (including attribute filters)
-  const apiProducts = await getProducts({
+  const productsPage = await getProductsPage({
     search,
     ordering: apiSortOption,
     is_featured: isFeatured,
@@ -128,13 +128,14 @@ export default async function AllProductsPage({ searchParams }: AllProductsPageP
     min_price: minPrice,
     max_price: maxPrice,
     ...attributeFilters, // Spread attribute filters
-    limit: 100,
+    page_size: 12,
+    page: 1,
   });
   
-  console.log(`🔍 All Products Page - Fetched ${apiProducts.length} products`);
+  console.log(`🔍 All Products Page - Fetched ${productsPage.results.length} products`);
   
   // Transform API products to internal format
-  const products = apiProducts.map(transformProduct);
+  const products = productsPage.results.map(transformProduct);
 
   return (
     <>
@@ -143,7 +144,7 @@ export default async function AllProductsPage({ searchParams }: AllProductsPageP
         description="Explore our complete collection of hand-felted slippers, crafted with care in Kathmandu."
         crumbs={[{ label: "Home", href: "/" }, { label: "All Products" }]}
       />
-      <CollectionBrowser collectionSlug="all" initialProducts={products} />
+      <CollectionBrowser collectionSlug="all" initialProducts={products} initialCount={productsPage.count} />
     </>
   );
 }

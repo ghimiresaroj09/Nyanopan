@@ -82,10 +82,12 @@ export function ContactForm() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-[#ece4d5] p-6 sm:p-8">
-      <h2 className="font-serif text-2xl font-normal text-[#28221c] mb-6">
+    <div className="rounded-2xl border border-[#ece4d5] bg-white p-6 shadow-sm sm:p-8 lg:p-9">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#a4642d]">Send a note</p>
+      <h2 className="mb-2 font-serif text-2xl font-normal text-[#28221c] sm:text-3xl">
         Send us a Message
       </h2>
+      <p className="mb-7 text-sm leading-relaxed text-[#675c4e]">Share a few details and we&apos;ll get back to you as soon as we can.</p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Name */}

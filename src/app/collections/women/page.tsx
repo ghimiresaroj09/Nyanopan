@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { CollectionBrowser } from "@/components/collection/collection-browser";
 import { PageHeader } from "@/components/shared/page-header";
-import { getProducts, type Product as APIProduct } from "@/lib/api/products";
+import { getProductsPage, type Product as APIProduct } from "@/lib/api/products";
 import type { Product } from "@/types/product";
 
 export const metadata: Metadata = {
@@ -72,8 +72,8 @@ function transformProduct(apiProduct: APIProduct): Product {
 
 export default async function WomensCollectionPage() {
   // Fetch products filtered by gender=WOMEN
-  const apiProducts = await getProducts({ gender: "WOMEN", limit: 100 });
-  const products = apiProducts.map(transformProduct);
+  const productsPage = await getProductsPage({ gender: "WOMEN", page_size: 12, page: 1 });
+  const products = productsPage.results.map(transformProduct);
 
   return (
     <>
@@ -82,7 +82,7 @@ export default async function WomensCollectionPage() {
         description="Handcrafted wool slippers designed for women. Made with care in our Kathmandu workshop."
         crumbs={[{ label: "Home", href: "/" }, { label: "Women's Collection" }]}
       />
-      <CollectionBrowser collectionSlug="women" initialProducts={products} />
+      <CollectionBrowser collectionSlug="women" initialProducts={products} initialCount={productsPage.count} />
     </>
   );
 }

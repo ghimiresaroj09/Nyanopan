@@ -18,6 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApiFilterSidebar } from "@/components/collection/api-filter-sidebar";
 import { ProductGrid } from "@/components/collection/product-grid";
 import { parseSearchParams } from "@/lib/schemas/filters";
+import { getProductsPage, type Product as APIProduct } from "@/lib/api/products";
+import { mapSortToAPI } from "@/lib/api/sort-mapper";
 import type { Product, SortOption } from "@/types/product";
 
 const SORT_LABELS: Record<SortOption, string> = {
@@ -35,9 +37,10 @@ const DEFAULT_SORT_LABEL = "None";
 interface CollectionBrowserProps {
   collectionSlug: string;
   initialProducts: Product[];
+  initialCount?: number;
 }
 
-function CollectionBrowserInner({ collectionSlug, initialProducts }: CollectionBrowserProps) {
+function CollectionBrowserInner({ collectionSlug, initialProducts, initialCount = initialProducts.length }: CollectionBrowserProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,6 +53,16 @@ function CollectionBrowserInner({ collectionSlug, initialProducts }: CollectionB
   const modelFilter = searchParams.get("model") || "";
   
   const [searchInput, setSearchInput] = useState(searchQuery);
+  const [visibleProducts, setVisibleProducts] = useState(initialProducts);
+  const [loadedCount, setLoadedCount] = useState(initialProducts.length);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(initialProducts.length < initialCount);
+
+  useEffect(() => {
+    setVisibleProducts(initialProducts);
+    setLoadedCount(initialProducts.length);
+    setHasMore(initialProducts.length < initialCount);
+  }, [initialProducts, initialCount]);
   
   // Sync search input with URL param changes
   useEffect(() => {
@@ -80,8 +93,6 @@ function CollectionBrowserInner({ collectionSlug, initialProducts }: CollectionB
     Object.fromEntries(searchParams.entries())
   );
 
-  const visibleProducts = initialProducts;
-  
   function updateParams(next: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(next)) {
@@ -115,6 +126,50 @@ function CollectionBrowserInner({ collectionSlug, initialProducts }: CollectionB
     const params = new URLSearchParams(searchParams.toString());
     params.delete('search');
     router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname);
+  }
+
+  async function loadMore() {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    const apiSortOption = sort ? mapSortToAPI(sort) : undefined;
+    const attributeFilters: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      if (key.startsWith("attribute_")) attributeFilters[key] = value;
+    });
+
+    const fixedFilters: Record<string, string | undefined> = {};
+    if (collectionSlug === "men") fixedFilters.gender = "MEN";
+    if (collectionSlug === "women") fixedFilters.gender = "WOMEN";
+    if (collectionSlug === "unisex") fixedFilters.gender = "UNISEX";
+    if (!["all", "men", "women", "unisex"].includes(collectionSlug)) {
+      fixedFilters.category = collectionSlug;
+    }
+
+    const page = await getProductsPage({
+      ...fixedFilters,
+      search: searchQuery || undefined,
+      ordering: apiSortOption,
+      is_featured: sort === "featured" ? true : undefined,
+      gender: searchParams.get("gender")?.toUpperCase() || fixedFilters.gender,
+      sole_type: (searchParams.get("sole_type")?.toUpperCase() as "LEATHER" | "RUBBER" | null) || undefined,
+      usage_location: (searchParams.get("usage_location")?.toUpperCase() as "INSIDE" | "OUTSIDE" | "BOTH" | null) || undefined,
+      model: searchParams.get("model") || undefined,
+      min_price: searchParams.get("min_price") ? Number(searchParams.get("min_price")) : undefined,
+      max_price: searchParams.get("max_price") ? Number(searchParams.get("max_price")) : undefined,
+      ...attributeFilters,
+      page_size: 12,
+      page: Math.floor(loadedCount / 12) + 1,
+    });
+
+    const transformed = page.results.map(transformProduct);
+    setVisibleProducts((current) => {
+      const existing = new Set(current.map((product) => product.slug));
+      return [...current, ...transformed.filter((product) => !existing.has(product.slug))];
+    });
+    setLoadedCount((current) => current + transformed.length);
+    setHasMore(Boolean(page.next) && page.results.length > 0);
+    setIsLoadingMore(false);
   }
 
   const hasSearch = searchQuery.length > 0;
@@ -170,7 +225,7 @@ function CollectionBrowserInner({ collectionSlug, initialProducts }: CollectionB
               </SheetContent>
             </Sheet>
             <p className="text-sm text-muted-foreground" aria-live="polite">
-              Show {visibleProducts.length} {visibleProducts.length === 1 ? "result" : "results"}
+              Show {visibleProducts.length} of {initialCount} {initialCount === 1 ? "result" : "results"}
               {hasSearch && (
                 <span className="ml-1">
                   for &quot;{searchQuery}&quot;
@@ -225,12 +280,63 @@ function CollectionBrowserInner({ collectionSlug, initialProducts }: CollectionB
               </p>
             </div>
           ) : (
-            <ProductGrid products={visibleProducts} />
+            <>
+              <ProductGrid products={visibleProducts} />
+              {hasMore && (
+                <div className="mt-10 flex justify-center">
+                  <Button type="button" variant="outline" size="lg" onClick={loadMore} disabled={isLoadingMore} className="min-w-36">
+                    {isLoadingMore ? "Loading..." : "View more"}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
     </div>
   );
+}
+
+function transformProduct(apiProduct: APIProduct): Product {
+  const minPrice = parseFloat(apiProduct.price_range.min_price);
+  const maxPrice = parseFloat(apiProduct.price_range.max_price);
+  const genderMap: Record<string, Product["gender"]> = {
+    MEN: "men",
+    WOMEN: "women",
+    UNISEX: "unisex",
+    KIDS: "boys",
+    BABY: "boys",
+  };
+
+  return {
+    slug: apiProduct.slug,
+    name: apiProduct.name,
+    tagline: apiProduct.model?.name || "",
+    model: apiProduct.model?.name || "Standard",
+    articleNumber: apiProduct.id.substring(0, 8).toUpperCase(),
+    price: minPrice,
+    compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
+    gender: genderMap[apiProduct.gender || ""] || "unisex",
+    soleType: "leather",
+    shaftHeight: "low",
+    useCase: "indoor",
+    colors: [{ name: "Default", value: "default", image: apiProduct.primary_image.url }],
+    sizes: [
+      { name: "36", image: "" }, { name: "37", image: "" }, { name: "38", image: "" },
+      { name: "39", image: "" }, { name: "40", image: "" }, { name: "41", image: "" },
+      { name: "42", image: "" }, { name: "43", image: "" }, { name: "44", image: "" },
+      { name: "45", image: "" },
+    ],
+    categories: [apiProduct.category?.slug || "uncategorized"],
+    features: [],
+    benefits: [],
+    description: [],
+    images: [apiProduct.primary_image.url],
+    badge: apiProduct.is_featured ? "Bestseller" : undefined,
+    featured: apiProduct.is_featured,
+    addedAt: apiProduct.created_at,
+    popularity: apiProduct.is_featured ? 100 : 0,
+  };
 }
 
 function ProductGridSkeleton() {

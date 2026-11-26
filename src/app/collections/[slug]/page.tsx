@@ -5,7 +5,7 @@ import { CollectionBrowser } from "@/components/collection/collection-browser";
 import { PageHeader } from "@/components/shared/page-header";
 import { CollectionSchema } from "@/components/seo/collection-schema";
 import { getCategories } from "@/lib/api/categories";
-import { getProducts, type Product as APIProduct } from "@/lib/api/products";
+import { getProductsPage, type Product as APIProduct } from "@/lib/api/products";
 import { generateCollectionKeywords } from "@/lib/seo/keywords";
 import type { Product } from "@/types/product";
 
@@ -81,15 +81,15 @@ export async function generateMetadata({ params }: CollectionPageProps): Promise
   if (!category) return {};
   
   // Get products count
-  const apiProducts = await getProducts({ category: slug, limit: 100 });
-  const productCount = apiProducts.length;
+  const productsPage = await getProductsPage({ category: slug, page_size: 12, page: 1 });
+  const productCount = productsPage.count;
   
   // Enhanced description
   const description = category.description || 
     `Discover our ${category.name} collection. ${productCount} handcrafted products made from 100% natural wool by fair trade artisans in Kathmandu, Nepal.`;
   
   // Get first product image for OG image
-  const firstProductImage = apiProducts[0]?.primary_image?.url;
+  const firstProductImage = productsPage.results[0]?.primary_image?.url;
   
   // Generate dynamic keywords
   const keywords = generateCollectionKeywords({
@@ -143,8 +143,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   if (!category) notFound();
 
   // Fetch products for this category
-  const apiProducts = await getProducts({ category: slug, limit: 100 });
-  const initialProducts = apiProducts.map(transformProduct);
+  const productsPage = await getProductsPage({ category: slug, page_size: 12, page: 1 });
+  const initialProducts = productsPage.results.map(transformProduct);
 
   return (
     <>
@@ -154,7 +154,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
           name: category.name,
           description: category.description || `Explore our ${category.name} collection`,
           slug: category.slug,
-          numberOfItems: apiProducts.length,
+          numberOfItems: productsPage.count,
         }}
       />
       
@@ -163,7 +163,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         description={category.description || `Explore our ${category.name} collection`}
         crumbs={[{ label: "Home", href: "/" }, { label: category.name }]}
       />
-      <CollectionBrowser collectionSlug={slug} initialProducts={initialProducts} />
+      <CollectionBrowser collectionSlug={slug} initialProducts={initialProducts} initialCount={productsPage.count} />
     </>
   );
 }

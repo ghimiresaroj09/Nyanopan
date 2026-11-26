@@ -36,6 +36,7 @@ export function MobileMenu({ categories }: MobileMenuProps) {
     { href: "/collections/unisex", label: "Unisex Collections" },
     { href: "/wishlist", label: "My Wishlist" },
     { href: "/our-story", label: "Our Story" },
+    { href: "/blog", label: "Journal" },
     { href: "/contact", label: "Contact Us" },
     { href: "/sustainability", label: "Sustainability" },
   ];

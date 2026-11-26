@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { getSiteConfig } from "@/config/site";
 import { getCategories } from "@/lib/api/categories";
 import { getProducts } from "@/lib/api/products";
+import { getBlogs } from "@/lib/api/blogs";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteConfig = await getSiteConfig();
@@ -19,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${siteConfig.url}/our-story`,
       lastModified: new Date(),
       changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteConfig.url}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
       priority: 0.8,
     },
     {
@@ -71,5 +78,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...collectionRoutes, ...productRoutes];
+  // The list endpoint supplies published slugs and dates without incrementing views.
+  const blogs = await getBlogs();
+  const blogRoutes: MetadataRoute.Sitemap = blogs.map((blog) => ({
+    url: `${siteConfig.url}/blog/${blog.slug}`,
+    lastModified: new Date(blog.created_at),
+    changeFrequency: "monthly",
+    priority: blog.is_featured ? 0.8 : 0.6,
+  }));
+
+  return [...staticRoutes, ...collectionRoutes, ...productRoutes, ...blogRoutes];
 }

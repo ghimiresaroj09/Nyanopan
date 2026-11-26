@@ -135,12 +135,24 @@ export interface GetProductsParams {
   // Pagination
   limit?: number;
   offset?: number;
+  page_size?: number;
+  page?: number;
   
   // Dynamic attribute filters (attribute_<id>=<value_id>)
   [key: string]: string | number | boolean | undefined;
 }
 
 export async function getProducts(params?: GetProductsParams): Promise<Product[]> {
+  const response = await getProductsPage(params);
+  return response.results;
+}
+
+export async function getProductsPage(params?: GetProductsParams): Promise<{
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Product[];
+}> {
   try {
     const searchParams = new URLSearchParams();
     
@@ -181,10 +193,14 @@ export async function getProducts(params?: GetProductsParams): Promise<Product[]
     }
     
     // Pagination parameters
-    if (params?.limit) {
+    if (params?.page_size) {
+      searchParams.append('page_size', params.page_size.toString());
+    } else if (params?.limit) {
       searchParams.append('limit', params.limit.toString());
     }
-    if (params?.offset) {
+    if (params?.page) {
+      searchParams.append('page', params.page.toString());
+    } else if (params?.offset && !params?.page_size) {
       searchParams.append('offset', params.offset.toString());
     }
     
@@ -209,15 +225,20 @@ export async function getProducts(params?: GetProductsParams): Promise<Product[]
 
     if (!response.ok) {
       console.error("Failed to fetch products", response.status);
-      return [];
+      return { count: 0, next: null, previous: null, results: [] };
     }
 
     const data: ProductsResponse = await response.json();
     console.log(`✅ API Response: ${data.data.results.length} products`);
-    return data.data.results;
+    return {
+      count: data.data.count,
+      next: data.data.next,
+      previous: data.data.previous,
+      results: data.data.results,
+    };
   } catch (error) {
     console.error("Error fetching products:", error);
-    return [];
+    return { count: 0, next: null, previous: null, results: [] };
   }
 }
 

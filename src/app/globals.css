@@ -3,6 +3,23 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.blog-prose > :first-child { margin-top: 0; }
+.blog-prose > :last-child { margin-bottom: 0; }
+.blog-prose p { margin: 1.25rem 0; }
+.blog-prose h2, .blog-prose h3, .blog-prose h4 { margin: 2rem 0 0.75rem; color: #28221c; font-family: var(--font-serif); line-height: 1.25; }
+.blog-prose h2 { font-size: 1.875rem; }
+.blog-prose h3 { font-size: 1.5rem; }
+.blog-prose h4 { font-size: 1.25rem; }
+.blog-prose ul, .blog-prose ol { margin: 1.25rem 0; padding-left: 1.5rem; }
+.blog-prose ul { list-style: disc; }
+.blog-prose ol { list-style: decimal; }
+.blog-prose li { margin: 0.4rem 0; padding-left: 0.25rem; }
+.blog-prose a { color: #a4642d; text-decoration: underline; text-underline-offset: 3px; }
+.blog-prose blockquote { margin: 1.5rem 0; border-left: 3px solid #c8a982; padding-left: 1rem; color: #675c4e; font-family: var(--font-serif); font-size: 1.25rem; }
+.blog-prose img { max-width: 100%; height: auto; border-radius: 0.75rem; }
+.blog-prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.blog-prose th, .blog-prose td { border: 1px solid #ece4d5; padding: 0.5rem 0.75rem; text-align: left; }
+
 /*
  * Design tokens for the nyanopan storefront.
  * Palette: warm paper neutrals, deep felt green, sand accents.

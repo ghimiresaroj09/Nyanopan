@@ -22,6 +22,7 @@ export async function Footer() {
       title: "Information",
       links: [
         { href: "/our-story", label: "Our Story" },
+        { href: "/blog", label: "Journal" },
         { href: "/sustainability", label: "Sustainability" },
         { href: "/contact", label: "Contact Us" },
         { href: "/shipping", label: "Shipping" },
