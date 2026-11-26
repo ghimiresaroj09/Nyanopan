@@ -21,13 +21,12 @@ import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { cart, useCart, useCartSubtotal } from "@/hooks/use-cart";
 import { placeOrder } from "@/lib/orders";
 import {
-  NEPAL_CITIES_AND_DISTRICTS,
   checkoutSchema,
   type CheckoutInput,
 } from "@/lib/schemas/checkout";
 import { formatPrice } from "@/lib/format";
 import type { OrderDraft } from "@/types/user";
-import { getSiteConfiguration, fallbackConfig } from "@/lib/api/config";
+import type { CheckoutOrder } from "@/types/checkout";
 
 interface FormState {
   fullName: string;
@@ -43,6 +42,14 @@ interface FormState {
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
+
+interface DeliveryLocation {
+  id: string;
+  name: string;
+  delivery_charge: string;
+  is_free: boolean;
+  effective_charge: number;
+}
 
 const INITIAL_FORM: FormState = {
   fullName: "",
@@ -64,21 +71,32 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
-  const [whatsappNumber, setWhatsappNumber] = useState<string>("");
+  const [deliveryLocations, setDeliveryLocations] = useState<DeliveryLocation[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+  const [locationsError, setLocationsError] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
-  // Fetch WhatsApp number from configuration
   useEffect(() => {
-    getSiteConfiguration().then((config) => {
-      const number = config?.whatsapp || fallbackConfig.whatsapp;
-      // Clean the number - remove any non-digits except leading +
-      const cleanNumber = number.replace(/[^\d+]/g, '');
-      setWhatsappNumber(cleanNumber);
-    });
+    let active = true;
+    fetch("/api/delivery-locations")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Failed to load delivery locations");
+        return response.json();
+      })
+      .then((result) => {
+        if (!active) return;
+        if (!result.success || !Array.isArray(result.data)) throw new Error("Invalid delivery locations response");
+        setDeliveryLocations(result.data);
+        setLocationsError(false);
+      })
+      .catch(() => { if (active) setLocationsError(true); })
+      .finally(() => { if (active) setLocationsLoading(false); });
+    return () => { active = false; };
   }, []);
 
-  // Delivery charges will be discussed via WhatsApp after order confirmation
-  const shipping = 0; // Not calculated at checkout
-  const total = subtotal; // Total shown without delivery charges
+  const selectedLocation = deliveryLocations.find((location) => location.name === form.cityOrDistrict);
+  const shipping = selectedLocation?.effective_charge ?? 0;
+  const total = subtotal + shipping;
 
   if (lines.length === 0) {
     return (
@@ -99,9 +117,10 @@ export default function CheckoutPage() {
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
+    setCheckoutError("");
   }
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const parsed = checkoutSchema.safeParse(form);
     if (!parsed.success) {
@@ -114,38 +133,50 @@ export default function CheckoutPage() {
       return;
     }
 
-    setSubmitting(true);
     const data: CheckoutInput = parsed.data;
 
-    // Build WhatsApp message
-    const orderDetails = lines.map((line) => 
-      `- ${line.name}\n  ${line.optionSelections?.join(" | ") || `Color: ${line.colorName} | Size: ${line.size}`}\n  Qty: ${line.quantity} x ${formatPrice(line.unitPrice)} = ${formatPrice(line.unitPrice * line.quantity)}`
-    ).join('\n\n');
+    if (!selectedLocation) {
+      setCheckoutError("Please select an available delivery location.");
+      return;
+    }
+    if (lines.some((line) => !line.variantId)) {
+      setCheckoutError("One or more cart items need to be re-added before checkout. Please remove them and add them again.");
+      return;
+    }
 
-    const message = `*NEW ORDER REQUEST*
+    setSubmitting(true);
+    setCheckoutError("");
+    let checkoutOrder: CheckoutOrder;
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
+          customer_name: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          alternate_phone: data.alternatePhone,
+          notes: data.orderNote,
+          company_name: data.companyName,
+          pan_vat_number: data.panVatNumber,
+          delivery_location_id: selectedLocation.id,
+          address: data.address,
+          landmark: data.landmark,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.success === false || !result.data?.id) {
+        throw new Error(result.message || "We could not place your order. Please check your details and try again.");
+      }
+      checkoutOrder = result.data as CheckoutOrder;
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : "We could not place your order. Please try again.");
+      setSubmitting(false);
+      return;
+    }
 
-*ORDER DETAILS:*
-${orderDetails}
-
-*Order Total:* ${formatPrice(subtotal)}
-*Delivery charges:* To be confirmed
-
-*CUSTOMER INFORMATION:*
-Name: ${data.fullName}
-Email: ${data.email}
-Phone: ${data.phone}
-${data.alternatePhone ? `Alternate Phone: ${data.alternatePhone}\n` : ''}
-*DELIVERY ADDRESS:*
-${data.address}
-${data.landmark ? `Landmark: ${data.landmark}\n` : ''}City/District: ${data.cityOrDistrict}
-${data.companyName ? `\n*COMPANY DETAILS:*\nCompany: ${data.companyName}\n` : ''}${data.panVatNumber ? `PAN/VAT: ${data.panVatNumber}\n` : ''}${data.orderNote ? `\n*ORDER NOTE:*\n${data.orderNote}\n` : ''}
-Thank you for your order!`;
-
-    // Create WhatsApp URL
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-
-    // Save order locally
+    // Keep a local order record for the order history UI.
     const draft: OrderDraft = {
       userId: "guest",
       email: data.email,
@@ -171,18 +202,15 @@ Thank you for your order!`;
         orderNote: data.orderNote,
       },
       subtotal,
-      shipping: shipping ?? 0,
-      total: total ?? subtotal,
+      shipping,
+      total,
     };
 
     const order = placeOrder(draft);
+    sessionStorage.setItem("nyanopan-checkout-order", JSON.stringify(checkoutOrder));
     cart.clear();
-    
-    // Redirect to WhatsApp
-    setTimeout(() => {
-      window.open(whatsappUrl, '_blank');
-      router.push(`/checkout/success?order=${order.number}`);
-    }, 500);
+
+    router.push(`/checkout/success?order=${encodeURIComponent(checkoutOrder.id)}&local=${order.number}`);
   }
 
   return (
@@ -362,13 +390,15 @@ Thank you for your order!`;
                     <SelectValue placeholder="Choose your city or district" />
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
-                    {NEPAL_CITIES_AND_DISTRICTS.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
+                    {deliveryLocations.map((location) => (
+                      <SelectItem key={location.id} value={location.name}>
+                        {location.name}{location.is_free ? " · Free delivery" : ` · ${formatPrice(location.effective_charge)}`}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {locationsLoading && <p className="mt-1.5 text-xs text-muted-foreground">Loading delivery locations…</p>}
+                {locationsError && <p className="mt-1.5 text-xs text-destructive">Delivery locations could not be loaded. Please refresh and try again.</p>}
                 {errors.cityOrDistrict && (
                   <p className="mt-1.5 text-xs text-destructive">{errors.cityOrDistrict}</p>
                 )}
@@ -408,13 +438,18 @@ Thank you for your order!`;
             </div>
           </section>
 
+          {checkoutError && (
+            <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {checkoutError}
+            </p>
+          )}
           <Button
             type="submit"
             size="lg"
             className="w-full h-13 bg-primary hover:bg-primary/90 text-primary-foreground text-base font-medium shadow-md transition-transform active:scale-[0.99]"
             disabled={submitting}
           >
-            {submitting ? "Processing Order..." : `Place Order — ${formatPrice(subtotal)}`}
+            {submitting ? "Processing Order..." : `Place Order — ${formatPrice(total)}`}
           </Button>
         </form>
 
@@ -462,7 +497,7 @@ Thank you for your order!`;
             <div className="flex items-start justify-between gap-3">
               <span className="text-muted-foreground">Delivery</span>
               <span className="font-medium text-foreground text-right text-[11px] leading-tight max-w-[140px]">
-                To be confirmed via WhatsApp
+                {selectedLocation ? (selectedLocation.is_free ? "Free" : formatPrice(shipping)) : "Select a location"}
               </span>
             </div>
 
@@ -480,7 +515,7 @@ Thank you for your order!`;
               <span>Cash on Delivery / Direct Bank Transfer</span>
             </div>
             <p>
-              Your order is packed in our Kathmandu workshop and dispatched directly to your doorstep. Delivery charges will be confirmed via WhatsApp based on your location.
+              Your order is packed in our Kathmandu workshop and dispatched directly to your doorstep. Delivery charges are based on your selected location.
             </p>
           </div>
         </aside>

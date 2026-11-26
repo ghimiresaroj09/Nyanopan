@@ -6,18 +6,33 @@ import { PackageCheck, ShoppingBag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { getLastPlacedNumber } from "@/lib/orders";
-import { formatOrderNumber } from "@/lib/format";
+import { formatOrderNumber, formatPrice } from "@/lib/format";
+import type { CheckoutOrder } from "@/types/checkout";
 
 export default function CheckoutSuccessPage() {
   const [orderNumber, setOrderNumber] = useState<number | null>(null);
+  const [checkoutOrder, setCheckoutOrder] = useState<CheckoutOrder | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const fromParam = Number(params.get("order"));
-    setOrderNumber(
-      Number.isFinite(fromParam) && fromParam > 0 ? fromParam : getLastPlacedNumber()
-    );
+    const orderId = params.get("order");
+    const localOrderNumber = Number(params.get("local"));
+    try {
+      const storedOrder = sessionStorage.getItem("nyanopan-checkout-order");
+      if (storedOrder) {
+        const parsed = JSON.parse(storedOrder) as CheckoutOrder;
+        if (!orderId || parsed.id === orderId) setCheckoutOrder(parsed);
+        sessionStorage.removeItem("nyanopan-checkout-order");
+      }
+    } catch {
+      sessionStorage.removeItem("nyanopan-checkout-order");
+    }
+    setOrderNumber(Number.isFinite(localOrderNumber) && localOrderNumber > 0
+      ? localOrderNumber
+      : getLastPlacedNumber());
   }, []);
+
+  const displayOrderReference = checkoutOrder?.id ?? (orderNumber !== null ? formatOrderNumber(orderNumber) : null);
 
   return (
     <div className="container-page py-16 md:py-24">
@@ -26,23 +41,58 @@ export default function CheckoutSuccessPage() {
           <PackageCheck className="h-8 w-8 stroke-[1.75]" />
         </div>
 
-        <span className="editorial-eyebrow justify-center">Order Confirmed</span>
+        <span className="editorial-eyebrow justify-center">Order {checkoutOrder?.status ?? "Confirmed"}</span>
         <h1 className="mt-2 font-serif text-3xl sm:text-4xl text-foreground font-normal">
           Dhanyabad! Thank you for your order.
         </h1>
 
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-          {orderNumber !== null && (
+          {displayOrderReference && (
             <>
               Your order reference is{" "}
               <strong className="font-mono text-base font-semibold text-foreground">
-                {formatOrderNumber(orderNumber)}
+                {displayOrderReference}
               </strong>
               .{" "}
             </>
           )}
           We have received your order details. Our Kathmandu atelier team is preparing your pure wool slippers for delivery.
         </p>
+
+        {checkoutOrder && (
+          <div className="mt-8 space-y-5 text-left">
+            <section className="rounded-xl border border-border/70 p-5">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">Order details</h2>
+              <div className="mt-4 space-y-3">
+                {checkoutOrder.items.map((item, index) => (
+                  <div key={`${item.sku}-${index}`} className="flex justify-between gap-4 text-sm">
+                    <div>
+                      <p className="font-medium text-foreground">{item.product_name}</p>
+                      <p className="text-xs text-muted-foreground">{item.variant_name} · Qty {item.quantity}</p>
+                    </div>
+                    <span className="shrink-0">{formatPrice(Number(item.line_total))}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 space-y-2 border-t border-border/70 pt-3 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Items</span><span>{formatPrice(Number(checkoutOrder.product_subtotal))}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Delivery · {checkoutOrder.delivery_location_name}</span><span>{formatPrice(Number(checkoutOrder.delivery_charge))}</span></div>
+                <div className="flex justify-between font-semibold"><span>Total ({checkoutOrder.currency})</span><span>{formatPrice(Number(checkoutOrder.subtotal))}</span></div>
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-border/70 p-5 text-sm">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">Customer and delivery</h2>
+              <p className="mt-3 font-medium">{checkoutOrder.customer_name}</p>
+              <p className="text-muted-foreground">{checkoutOrder.email} · {checkoutOrder.phone}</p>
+              {checkoutOrder.alternate_phone && <p className="text-muted-foreground">Alternate: {checkoutOrder.alternate_phone}</p>}
+              <p className="mt-3">{checkoutOrder.address}{checkoutOrder.landmark ? ` · ${checkoutOrder.landmark}` : ""}</p>
+              <p className="text-muted-foreground">{checkoutOrder.city_district}</p>
+              {checkoutOrder.notes && <p className="mt-3 text-muted-foreground">Note: {checkoutOrder.notes}</p>}
+              {checkoutOrder.company_name && <p className="mt-3 text-muted-foreground">{checkoutOrder.company_name}{checkoutOrder.pan_vat_number ? ` · PAN/VAT ${checkoutOrder.pan_vat_number}` : ""}</p>}
+            </section>
+          </div>
+        )}
 
         <div className="mt-8 rounded-xl border border-border/70 bg-[#faf6ee] p-5 text-left text-xs space-y-2.5">
           <p className="font-semibold text-foreground uppercase tracking-wider text-[11px]">

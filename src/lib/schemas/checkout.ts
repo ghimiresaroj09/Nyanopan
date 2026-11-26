@@ -138,9 +138,7 @@ export const checkoutSchema = z.object({
     .or(z.literal("")),
 
   /* 3. Delivery Address */
-  cityOrDistrict: z.enum(NEPAL_CITIES_AND_DISTRICTS, {
-    message: "Please select your city or district.",
-  }),
+  cityOrDistrict: z.string().min(1, "Please select your city or district."),
   address: z
     .string()
     .trim()
