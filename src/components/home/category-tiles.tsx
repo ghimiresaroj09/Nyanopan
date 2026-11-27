@@ -4,63 +4,30 @@ import { ArrowRight } from "lucide-react";
 
 import type { HomepageCollectionsData } from "@/lib/api/homepage-collections";
 
-const defaultTiles = [
-  {
-    title: "Inside",
-    description: "Leather soles for smooth floors",
-    href: "/collections/all-slippers?sole=leather",
-    image: "https://images.unsplash.com/photo-1543420629-5350879dd4cd?w=420&q=80&auto=format&fit=crop",
-    alt: "White wool slippers indoors",
-  },
-  {
-    title: "Outside",
-    description: "Rubber soles for every surface",
-    href: "/collections/all-slippers?sole=rubber",
-    image: "https://images.unsplash.com/photo-1603218162086-fba879e8c17a?w=420&q=80&auto=format&fit=crop",
-    alt: "Wool slippers with rubber soles",
-  },
-  {
-    title: "Kids",
-    description: "Warm feet for small explorers",
-    href: "/collections/slippers-kids",
-    image: "https://images.unsplash.com/photo-1594150878496-03fd4a4afaf2?w=420&q=80&auto=format&fit=crop",
-    alt: "Colourful children's footwear",
-  },
-  {
-    title: "Baby",
-    description: "Soft booties for the smallest feet",
-    href: "/collections/baby-booties",
-    image: "https://images.unsplash.com/photo-1513091250092-b06c2b7981bc?w=420&q=80&auto=format&fit=crop",
-    alt: "Baby booties",
-  },
-];
-
 interface CategoryTilesProps {
   data: HomepageCollectionsData | null;
 }
 
 export function CategoryTiles({ data }: CategoryTilesProps) {
-  const tiles = data?.collections.map(collection => ({
+  if (!data || data.collections.length === 0) return null;
+
+  const tiles = data.collections.map(collection => ({
     title: collection.name,
     description: collection.intro,
     href: collection.link,
     image: collection.image,
     alt: collection.name,
-  })) || defaultTiles;
-
-  const tag = data?.tag || "Curated Collections";
-  const title = data?.title || "Find your companion for home & outdoors";
-  const description = data?.description || "Tailored with vegetable-tanned calfskin for quiet floor walking or natural crepe rubber for patio steps.";
+  }));
 
   return (
     <section className="container-page py-14 md:py-20">
       <div className="mb-10 text-center">
-        <span className="editorial-eyebrow">{tag}</span>
+        <span className="editorial-eyebrow">{data.tag}</span>
         <h2 className="mt-3 font-serif text-3xl md:text-4xl text-foreground">
-          {title}
+          {data.title}
         </h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg mx-auto">
-          {description}
+          {data.description}
         </p>
       </div>
 

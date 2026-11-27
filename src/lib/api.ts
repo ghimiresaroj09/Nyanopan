@@ -47,13 +47,13 @@ export function filterProducts(
     result = result.filter((p) => p.colors.some((c) => filters.colors.includes(c.value)));
   }
   if (filters.soles.length > 0) {
-    result = result.filter((p) => filters.soles.includes(p.soleType));
+    result = result.filter((p) => p.soleType && filters.soles.includes(p.soleType));
   }
   if (filters.models.length > 0) {
-    result = result.filter((p) => filters.models.includes(p.model));
+    result = result.filter((p) => p.model && filters.models.includes(p.model));
   }
   if (filters.genders.length > 0) {
-    result = result.filter((p) => filters.genders.includes(p.gender));
+    result = result.filter((p) => p.gender && filters.genders.includes(p.gender));
   }
   if (filters.sizes.length > 0) {
     result = result.filter((p) => p.sizes.some((s) => filters.sizes.includes(s.name)));
@@ -79,7 +79,7 @@ export function filterProducts(
     case "featured":
     default:
       return [...result].sort(
-        (a, b) => Number(b.featured ?? false) - Number(a.featured ?? false) || b.popularity - a.popularity
+        (a, b) => Number(b.featured ?? false) - Number(a.featured ?? false) || (b.popularity ?? 0) - (a.popularity ?? 0)
       );
   }
 }

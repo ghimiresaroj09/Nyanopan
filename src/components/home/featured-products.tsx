@@ -2,56 +2,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { ProductCard } from "@/components/collection/product-card";
-import { getFeaturedProducts, type Product as APIProduct } from "@/lib/api/products";
+import { getFeaturedProducts, toStorefrontProduct, type Product as APIProduct } from "@/lib/api/products";
 import type { Product } from "@/types/product";
-
-// Transform API product to internal Product type
-function transformProduct(apiProduct: APIProduct): Product {
-  const minPrice = parseFloat(apiProduct.price_range.min_price);
-  const maxPrice = parseFloat(apiProduct.price_range.max_price);
-
-  return {
-    slug: apiProduct.slug,
-    name: apiProduct.name,
-    tagline: apiProduct.model?.name || "",
-    model: apiProduct.model?.name || "Standard",
-    articleNumber: apiProduct.id.substring(0, 8),
-    price: minPrice,
-    compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
-    gender: (apiProduct.gender || "UNISEX").toLowerCase() as Product["gender"],
-    soleType: "leather", // Default, could be enhanced with API data
-    shaftHeight: "low", // Default, could be enhanced with API data
-    useCase: "indoor", // Default, could be enhanced with API data
-    colors: [
-      {
-        name: "Default",
-        value: "default",
-        image: apiProduct.primary_image.url,
-      },
-    ],
-    sizes: [
-      { name: "36", image: "" },
-      { name: "37", image: "" },
-      { name: "38", image: "" },
-      { name: "39", image: "" },
-      { name: "40", image: "" },
-      { name: "41", image: "" },
-      { name: "42", image: "" },
-      { name: "43", image: "" },
-      { name: "44", image: "" },
-      { name: "45", image: "" },
-    ], // Default sizes
-    categories: [apiProduct.category?.slug || "uncategorized"],
-    features: [],
-    benefits: [],
-    description: [],
-    images: [apiProduct.primary_image.url],
-    badge: apiProduct.is_featured ? "Bestseller" : undefined,
-    featured: apiProduct.is_featured,
-    addedAt: apiProduct.created_at,
-    popularity: 0,
-  };
-}
 
 interface FeaturedProductsProps {
   products?: APIProduct[];
@@ -59,7 +11,7 @@ interface FeaturedProductsProps {
 
 export async function FeaturedProducts({ products: providedProducts }: FeaturedProductsProps = {}) {
   const apiProducts = providedProducts || await getFeaturedProducts(4);
-  const featured = apiProducts.map(transformProduct);
+  const featured = apiProducts.map(toStorefrontProduct);
 
   if (featured.length === 0) return null;
 

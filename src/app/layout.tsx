@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: SITE_TITLE,
       template: `%s | ${siteConfig.name}`,
     },
-    description: siteConfig.description,
+    ...(siteConfig.description && { description: siteConfig.description }),
     alternates: {
       canonical: "/",
     },
@@ -29,7 +29,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       siteName: siteConfig.name,
       title: SITE_TITLE,
-      description: siteConfig.description,
+      ...(siteConfig.description && { description: siteConfig.description }),
       url: siteConfig.url,
       images: [
         {
@@ -43,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: SITE_TITLE,
-      description: siteConfig.description,
+      ...(siteConfig.description && { description: siteConfig.description }),
       images: ["/opengraph-image"],
     },
   };
@@ -83,7 +83,7 @@ export default async function RootLayout({
             {children}
           </main>
           <Footer />
-          <WhatsAppButton phone={siteConfiguration?.whatsapp ?? "9841234567"} />
+          {siteConfiguration?.whatsapp && <WhatsAppButton phone={siteConfiguration.whatsapp} />}
         </Providers>
       </body>
     </html>

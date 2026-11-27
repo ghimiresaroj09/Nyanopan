@@ -1,13 +1,11 @@
 import { getSiteConfig } from "@/config/site";
-import { getSiteConfiguration } from "@/lib/api/config";
 
 export async function OrganizationSchema() {
   const siteConfig = await getSiteConfig();
-  const apiConfig = await getSiteConfiguration();
   
   // Build social media links array from API config
-  const sameAs = apiConfig?.social 
-    ? Object.values(apiConfig.social).filter(url => url && url !== "https://facebook.com" && url !== "https://instagram.com")
+  const sameAs = siteConfig.social
+    ? Object.values(siteConfig.social).filter(Boolean)
     : [];
   
   const schema = {
@@ -17,13 +15,13 @@ export async function OrganizationSchema() {
     alternateName: "Nyanopan Store",
     url: siteConfig.url,
     logo: `${siteConfig.url}/brand/logo-cloud.png`,
-    description: siteConfig.description,
-    email: apiConfig?.email || siteConfig.contactEmail,
+    ...(siteConfig.description && { description: siteConfig.description }),
+    ...(siteConfig.contactEmail && { email: siteConfig.contactEmail }),
     ...(sameAs.length > 0 && { sameAs }),
-    ...(apiConfig?.phone && {
+    ...(siteConfig.phone && {
       contactPoint: {
         "@type": "ContactPoint",
-        telephone: apiConfig.phone,
+        telephone: siteConfig.phone,
         contactType: "Customer Service",
         areaServed: "NP",
         availableLanguage: ["en", "ne"],

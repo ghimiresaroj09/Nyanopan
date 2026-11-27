@@ -9,14 +9,14 @@ export interface ProductColor {
   /** Normalised filter value, e.g. "grey". */
   value: string;
   /** Image shown for this colour variant. */
-  image: string;
+  image?: string;
 }
 
 export interface ProductSize {
   /** Display name, e.g. "M", "L", "36", "37". */
   name: string;
   /** Image shown for this size variant (optional). */
-  image: string;
+  image?: string;
 }
 
 export interface ProductFeature {
@@ -27,15 +27,15 @@ export interface ProductFeature {
 export interface Product {
   slug: string;
   name: string;
-  tagline: string;
-  model: string;
+  tagline?: string;
+  model?: string;
   articleNumber: string;
   price: number;
   compareAtPrice?: number;
-  gender: Gender;
-  soleType: SoleType;
-  shaftHeight: ShaftHeight;
-  useCase: UseCase;
+  gender?: Gender;
+  soleType?: SoleType;
+  shaftHeight?: ShaftHeight;
+  useCase?: UseCase;
   colors: ProductColor[];
   sizes: ProductSize[];
   /** Collection slugs this product belongs to. */
@@ -49,7 +49,7 @@ export interface Product {
   /** ISO date, used for the "newest" sort order. */
   addedAt: string;
   /** Used for the "best selling" sort order. */
-  popularity: number;
+  popularity?: number;
 }
 
 export interface ProductFilters {

@@ -7,65 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/collection/product-card";
 import { useWishlistSlugs } from "@/hooks/use-wishlist";
 import { useQuery } from "@tanstack/react-query";
-import { getProducts } from "@/lib/api/products";
-import type { Product as APIProduct } from "@/lib/api/products";
-import type { Product } from "@/types/product";
-
-// Transform API product to internal Product type
-function transformProduct(apiProduct: APIProduct): Product {
-  const minPrice = parseFloat(apiProduct.price_range.min_price);
-  const maxPrice = parseFloat(apiProduct.price_range.max_price);
-
-  const genderMap: Record<string, Product["gender"]> = {
-    MEN: "men",
-    WOMEN: "women",
-    UNISEX: "unisex",
-    KIDS: "boys",
-    BABY: "boys",
-  };
-
-  return {
-    slug: apiProduct.slug,
-    name: apiProduct.name,
-    tagline: apiProduct.model?.name || "",
-    model: apiProduct.model?.name || "Standard",
-    articleNumber: apiProduct.id.substring(0, 8).toUpperCase(),
-    price: minPrice,
-    compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
-    gender: genderMap[apiProduct.gender || ""] || "unisex",
-    soleType: "leather",
-    shaftHeight: "low",
-    useCase: "indoor",
-    colors: [
-      {
-        name: "Default",
-        value: "default",
-        image: apiProduct.primary_image.url,
-      },
-    ],
-    sizes: [
-      { name: "36", image: "" },
-      { name: "37", image: "" },
-      { name: "38", image: "" },
-      { name: "39", image: "" },
-      { name: "40", image: "" },
-      { name: "41", image: "" },
-      { name: "42", image: "" },
-      { name: "43", image: "" },
-      { name: "44", image: "" },
-      { name: "45", image: "" },
-    ],
-    categories: [apiProduct.category?.slug || "uncategorized"],
-    features: [],
-    benefits: [],
-    description: [],
-    images: [apiProduct.primary_image.url],
-    badge: apiProduct.is_featured ? "Bestseller" : undefined,
-    featured: apiProduct.is_featured,
-    addedAt: apiProduct.created_at,
-    popularity: apiProduct.is_featured ? 100 : 0,
-  };
-}
+import { getProducts, toStorefrontProduct } from "@/lib/api/products";
 
 export function WishlistContent() {
   const wishlistSlugs = useWishlistSlugs();
@@ -75,7 +17,7 @@ export function WishlistContent() {
     queryKey: ["products", "all"],
     queryFn: async () => {
       const apiProducts = await getProducts({ limit: 100 });
-      return apiProducts.map(transformProduct);
+      return apiProducts.map(toStorefrontProduct);
     },
   });
 

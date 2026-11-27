@@ -3,16 +3,16 @@ import { getSiteConfig } from "@/config/site";
 interface ProductSchemaProps {
   product: {
     name: string;
-    description: string;
-    image: string;
+    description?: string;
+    image?: string;
     slug: string;
     sku?: string;
     brand: string;
-    category: string;
+    category?: string;
     price: number;
     currency: string;
-    availability: "InStock" | "OutOfStock" | "PreOrder";
-    condition: "NewCondition" | "UsedCondition" | "RefurbishedCondition";
+    availability?: "InStock" | "OutOfStock" | "PreOrder";
+    condition?: "NewCondition" | "UsedCondition" | "RefurbishedCondition";
     aggregateRating?: {
       ratingValue: number;
       reviewCount: number;
@@ -27,31 +27,30 @@ export async function ProductSchema({ product }: ProductSchemaProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
-    image: product.image,
     url: `${siteConfig.url}/products/${product.slug}`,
-    sku: product.sku || product.slug,
+    ...(product.description ? { description: product.description } : {}),
+    ...(product.image ? { image: product.image } : {}),
+    ...(product.sku ? { sku: product.sku } : {}),
     brand: {
       "@type": "Brand",
       name: product.brand,
     },
-    category: product.category,
+    ...(product.category ? { category: product.category } : {}),
     offers: {
       "@type": "Offer",
       price: product.price,
       priceCurrency: product.currency,
-      availability: `https://schema.org/${product.availability}`,
       url: `${siteConfig.url}/products/${product.slug}`,
       seller: {
         "@type": "Organization",
         name: "Nyanopan",
       },
-      priceValidUntil: new Date(
-        new Date().setFullYear(new Date().getFullYear() + 1)
-      )
-        .toISOString()
-        .split("T")[0],
-      itemCondition: `https://schema.org/${product.condition}`,
+      ...(product.availability
+        ? { availability: `https://schema.org/${product.availability}` }
+        : {}),
+      ...(product.condition
+        ? { itemCondition: `https://schema.org/${product.condition}` }
+        : {}),
     },
     ...(product.aggregateRating && {
       aggregateRating: {

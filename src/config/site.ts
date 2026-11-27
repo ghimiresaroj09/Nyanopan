@@ -1,4 +1,4 @@
-import { getSiteConfiguration, fallbackConfig } from "@/lib/api/config";
+import { getSiteConfiguration } from "@/lib/api/config";
 
 /**
  * Resolves the canonical site URL for metadata, sitemap and robots.
@@ -21,35 +21,39 @@ function resolveSiteUrl(): string {
   return "http://localhost:3000";
 }
 
-// Static fallback values
 const staticConfig = {
   name: "Nyanopan",
   tagline: "Premium hand felted slippers from Nepal",
-  description: fallbackConfig.company_intro,
   url: resolveSiteUrl(),
-  contactEmail: fallbackConfig.email,
   freeShippingThreshold: 150,
 } as const;
 
-/**
- * Get site configuration with dynamic values from API
- * Falls back to static config if API fails
- */
-export async function getSiteConfig() {
-  const apiConfig = await getSiteConfiguration();
-  
-  if (apiConfig) {
-    return {
-      ...staticConfig,
-      description: apiConfig.company_intro,
-      contactEmail: apiConfig.email,
-    };
-  }
-  
-  return staticConfig;
+export interface SiteConfig {
+  name: string;
+  tagline: string;
+  url: string;
+  freeShippingThreshold: number;
+  description?: string;
+  contactEmail?: string;
+  phone?: string;
+  social?: {
+    facebook: string;
+    instagram: string;
+    tiktok: string;
+    pinterest: string;
+  };
 }
 
-// For backwards compatibility - use static config for client-side
-export const siteConfig = staticConfig;
+export async function getSiteConfig() {
+  const apiConfig = await getSiteConfiguration();
 
-export type SiteConfig = typeof staticConfig;
+  return {
+    ...staticConfig,
+    description: apiConfig?.company_intro,
+    contactEmail: apiConfig?.email,
+    phone: apiConfig?.phone,
+    social: apiConfig?.social,
+  } satisfies SiteConfig;
+}
+
+export const siteConfig = staticConfig;

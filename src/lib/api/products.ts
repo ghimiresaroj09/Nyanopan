@@ -1,4 +1,5 @@
 import { backendApiUrl } from "./backend";
+import type { Product as StorefrontProduct } from "@/types/product";
 
 const BACKEND_API_URL = backendApiUrl("products/");
 
@@ -68,6 +69,31 @@ export interface Product {
   price_range: ProductPriceRange;
   primary_image: ProductImage;
   created_at: string;
+}
+
+export function toStorefrontProduct(apiProduct: Product): StorefrontProduct {
+  const minPrice = parseFloat(apiProduct.price_range.min_price);
+  const maxPrice = parseFloat(apiProduct.price_range.max_price);
+  const primaryImage = apiProduct.primary_image?.url;
+
+  return {
+    slug: apiProduct.slug,
+    name: apiProduct.name,
+    tagline: apiProduct.model?.name ?? undefined,
+    model: apiProduct.model?.name ?? undefined,
+    articleNumber: apiProduct.id.substring(0, 8).toUpperCase(),
+    price: minPrice,
+    compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
+    colors: [],
+    sizes: [],
+    categories: apiProduct.category ? [apiProduct.category.slug] : [],
+    features: [],
+    benefits: [],
+    description: [],
+    images: primaryImage ? [primaryImage] : [],
+    featured: apiProduct.is_featured,
+    addedAt: apiProduct.created_at,
+  };
 }
 
 export interface ProductDetail extends Omit<Product, 'primary_image' | 'price_range'> {

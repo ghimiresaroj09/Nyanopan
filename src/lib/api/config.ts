@@ -35,19 +35,3 @@ export async function getSiteConfiguration(): Promise<SiteConfiguration | null> 
     return null;
   }
 }
-
-// Fallback configuration if API fails
-export const fallbackConfig: SiteConfiguration = {
-  company_intro: "Hand-felted slippers shaped from 100% natural mountain wool. Created by fair trade artisans in our Kathmandu workshop, finished with natural calfskin or recycled crepe soles.",
-  email: "hello@nyanopan.com",
-  phone: "+977 9841234567",
-  whatsapp: "9841234567",
-  address: "Boudha, Kathmandu, Nepal",
-  map_url: "https://maps.app.goo.gl/8UW7RE6zn7euYJ1T6",
-  social: {
-    facebook: "https://facebook.com",
-    instagram: "https://instagram.com",
-    tiktok: "https://tiktok.com",
-    pinterest: "https://pinterest.com",
-  },
-};

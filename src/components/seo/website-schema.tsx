@@ -9,7 +9,7 @@ export async function WebSiteSchema() {
     name: "Nyanopan",
     alternateName: "Nyanopan Store",
     url: siteConfig.url,
-    description: siteConfig.description,
+    ...(siteConfig.description && { description: siteConfig.description }),
     potentialAction: {
       "@type": "SearchAction",
       target: {

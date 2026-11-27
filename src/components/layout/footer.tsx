@@ -2,12 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 
-import { siteConfig } from "@/config/site";
-import { getSiteConfiguration, fallbackConfig } from "@/lib/api/config";
+import { getSiteConfiguration } from "@/lib/api/config";
 import { getCategories } from "@/lib/api/categories";
 
 export async function Footer() {
-  const config = await getSiteConfiguration() || fallbackConfig;
+  const config = await getSiteConfiguration();
   const categories = await getCategories();
 
   const columns = [
@@ -33,7 +32,7 @@ export async function Footer() {
     },
   ];
 
-  const SOCIAL_LINKS = [
+  const SOCIAL_LINKS = config ? [
     {
       name: "Facebook",
       href: config.social.facebook,
@@ -74,7 +73,7 @@ export async function Footer() {
         </svg>
       ),
     },
-  ];
+  ].filter((social) => social.href) : [];
 
   return (
     <footer className="border-t border-border/80 bg-[#f6efe2]">
@@ -97,9 +96,11 @@ export async function Footer() {
               </span>
             </div>
           </Link>
-          <p className="max-w-xs text-xs sm:text-sm leading-relaxed text-muted-foreground">
-            {config.company_intro}
-          </p>
+          {config?.company_intro && (
+            <p className="max-w-xs text-xs sm:text-sm leading-relaxed text-muted-foreground">
+              {config.company_intro}
+            </p>
+          )}
         </div>
 
         {columns.map((column) => (
@@ -121,11 +122,12 @@ export async function Footer() {
         ))}
 
         {/* Contacts & Socials Section */}
+        {config && (config.email || config.phone || config.address || SOCIAL_LINKS.length > 0) && (
         <div className="space-y-6">
-          <div>
+          {(config.email || config.phone || config.address) && <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">Contacts</h3>
             <ul className="mt-4 space-y-2.5 text-xs text-muted-foreground">
-              <li className="flex items-center gap-2.5">
+              {config.email && <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 text-terracotta shrink-0" />
                 <a
                   href={`mailto:${config.email}`}
@@ -133,8 +135,8 @@ export async function Footer() {
                 >
                   {config.email}
                 </a>
-              </li>
-              <li className="flex items-center gap-2.5">
+              </li>}
+              {config.phone && <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 text-terracotta shrink-0" />
                 <a
                   href={`tel:${config.phone}`}
@@ -142,32 +144,35 @@ export async function Footer() {
                 >
                   {config.phone}
                 </a>
-              </li>
-              <li className="flex items-start gap-2.5">
+              </li>}
+              {config.address && <li className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 text-terracotta shrink-0 mt-0.5" />
                 <span>{config.address}</span>
-              </li>
+              </li>}
             </ul>
-          </div>
+          </div>}
 
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">Socials</h3>
-            <div className="mt-3 flex items-center gap-2.5">
-              {SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/80 transition-colors hover:border-terracotta hover:bg-terracotta hover:text-white shadow-2xs"
-                >
-                  {social.icon}
-                </a>
-              ))}
+          {SOCIAL_LINKS.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">Socials</h3>
+              <div className="mt-3 flex items-center gap-2.5">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/80 transition-colors hover:border-terracotta hover:bg-terracotta hover:text-white shadow-2xs"
+                  >
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
+        )}
       </div>
 
       <div className="border-t border-border/80 bg-[#efe6d5]/60">

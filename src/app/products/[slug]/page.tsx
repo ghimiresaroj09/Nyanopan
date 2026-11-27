@@ -26,63 +26,50 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     };
   }
   
-  // Get price range
   const prices = productData.product_varient_values.map((v) => v.price);
-  const minPrice = prices.length ? Math.min(...prices) : 0;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const maxPrice = prices.length ? Math.max(...prices) : 0;
-  
-  // Generate rich description
-  const modelName = productData.model?.name || "wool footwear";
-  const categoryName = productData.category?.name || "Handcrafted goods";
-  const description = productData.description ||
-    `Handcrafted ${modelName} from Kathmandu. ${categoryName}. Made from 100% natural wool by fair trade artisans in Nepal.`;
-  
-  // Get primary image
+  const minPrice = prices.length ? Math.min(...prices) : undefined;
+  const description = productData.description?.replace(/<[^>]*>/g, "").substring(0, 160);
   const primaryImage = productData.feature_image?.url;
-  
-  // Generate dynamic keywords based on product attributes
   const keywords = generateProductKeywords({
-    categorySlug: productData.category?.slug || "uncategorized",
+    categorySlug: productData.category?.slug ?? "",
     productName: productData.name,
-    modelName,
-    gender: productData.gender?.toLowerCase() || "unisex",
-    isHandmade: true,
+    modelName: productData.model?.name ?? undefined,
+    gender: productData.gender?.toLowerCase() ?? undefined,
   });
   
   return {
     title: productData.name,
-    description: description.substring(0, 160), // SEO best practice: 150-160 chars
+    description,
     keywords,
     alternates: { canonical: `/products/${slug}` },
     openGraph: {
       title: productData.name,
-      description: description.substring(0, 160),
+      ...(description ? { description } : {}),
       type: "website",
       url: `/products/${slug}`,
-      images: [
+      ...(primaryImage ? { images: [
         {
           url: primaryImage,
           width: 1200,
           height: 630,
           alt: productData.name,
         },
-      ],
+      ] } : {}),
       siteName: "Nyanopan",
     },
     twitter: {
       card: "summary_large_image",
       title: productData.name,
-      description: description.substring(0, 160),
-      images: [primaryImage],
+      ...(description ? { description } : {}),
+      ...(primaryImage ? { images: [primaryImage] } : {}),
     },
-    other: {
+    ...(minPrice !== undefined ? { other: {
       "product:price:amount": minPrice.toString(),
       "product:price:currency": "NPR",
       "product:availability": "in stock",
       "product:condition": "new",
       "product:brand": "Nyanopan",
-    },
+    } } : {}),
   };
 }
 
@@ -98,6 +85,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const productData = await getProduct(slug);
   
   if (!productData) {
+    notFound();
+  }
+  if (productData.product_varient_values.length === 0) {
     notFound();
   }
   
@@ -124,16 +114,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ProductSchema
         product={{
           name: productData.name,
-          description: productData.description || `Handcrafted ${productData.model?.name || "wool footwear"} from Kathmandu`,
+          description: productData.description || undefined,
           image: productData.feature_image?.url,
           slug: productData.slug,
           sku: productData.id,
           brand: "Nyanopan",
-          category: productData.category?.name || "Handcrafted goods",
+          category: productData.category?.name ?? undefined,
           price: minPrice,
           currency: "NPR",
-          availability: "InStock",
-          condition: "NewCondition",
         }}
       />
       <BreadcrumbSchema items={breadcrumbItems} />
@@ -167,7 +155,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 function transformProductDetail(apiProduct: APIProduct): Product {
   // Get min and max price from variants
   const prices = apiProduct.product_varient_values.map((v) => v.price);
-  const minPrice = prices.length ? Math.min(...prices) : 0;
+  const minPrice = Math.min(...prices);
   const maxPrice = prices.length ? Math.max(...prices) : 0;
   
   // Map gender
@@ -181,7 +169,6 @@ function transformProductDetail(apiProduct: APIProduct): Product {
   
   // Extract all unique colors from variants
   const colorSet = new Set<string>();
-  const colorImages: Record<string, string | undefined> = {};
   
   apiProduct.attributes.forEach((attr) => {
     if (attr.attribute.name === "Color") {
@@ -194,24 +181,20 @@ function transformProductDetail(apiProduct: APIProduct): Product {
   const colors = Array.from(colorSet).map(colorName => ({
     name: colorName,
     value: colorName.toLowerCase(),
-    image: colorImages[colorName] || "", // Empty string if no image
   }));
   
   // Extract all unique sizes from variants with their images
-  const sizeMap = new Map<string, string>(); // name -> image
+  const sizeNames = new Set<string>();
   apiProduct.attributes.forEach((attr) => {
     if (attr.attribute.name === "Size" || attr.attribute.name === "Shoes Size") {
       attr.attributeValues.forEach((val) => {
-        sizeMap.set(val.name, "");
+        sizeNames.add(val.name);
       });
     }
   });
   
   // Convert to array format with both name and image
-  const sizes = Array.from(sizeMap.entries()).map(([name, image]) => ({
-    name,
-    image,
-  })).sort((a, b) => {
+  const sizes = Array.from(sizeNames, (name) => ({ name })).sort((a, b) => {
     // Try to parse as numbers for sorting
     const aNum = parseInt(a.name);
     const bNum = parseInt(b.name);
@@ -222,7 +205,7 @@ function transformProductDetail(apiProduct: APIProduct): Product {
   });
   
   // Collect all images
-  const images: string[] = [apiProduct.feature_image?.url || ""];
+  const images: string[] = apiProduct.feature_image?.url ? [apiProduct.feature_image.url] : [];
   
   // Add additional images if available
   if ('product_images' in apiProduct) {
@@ -235,39 +218,22 @@ function transformProductDetail(apiProduct: APIProduct): Product {
   return {
     slug: apiProduct.slug,
     name: apiProduct.name,
-    tagline: apiProduct.model?.name || "",
-    model: apiProduct.model?.name || "Standard",
+    tagline: apiProduct.model?.name ?? undefined,
+    model: apiProduct.model?.name ?? undefined,
     articleNumber: apiProduct.id.substring(0, 8).toUpperCase(),
     price: minPrice,
     compareAtPrice: minPrice !== maxPrice ? maxPrice : undefined,
-    gender: genderMap[apiProduct.gender || ""] || "unisex",
-    soleType: apiProduct.sole_type === "LEATHER" ? "leather" : "rubber",
-    shaftHeight: "low",
-    useCase: apiProduct.usage_location === "INSIDE" ? "indoor" : "indoor",
+    gender: apiProduct.gender ? genderMap[apiProduct.gender] : undefined,
+    soleType: apiProduct.sole_type === "LEATHER" ? "leather" : apiProduct.sole_type === "RUBBER" ? "rubber" : undefined,
+    useCase: apiProduct.usage_location === "INSIDE" ? "indoor" : "indoor-outdoor",
     colors,
-    sizes: sizes.length > 0 ? sizes : [
-      { name: "36", image: "" },
-      { name: "37", image: "" },
-      { name: "38", image: "" },
-      { name: "39", image: "" },
-      { name: "40", image: "" },
-      { name: "41", image: "" },
-      { name: "42", image: "" },
-      { name: "43", image: "" },
-      { name: "44", image: "" },
-      { name: "45", image: "" },
-    ],
-    categories: [apiProduct.category?.slug || "uncategorized"],
-    features: (apiProduct.key_features || []).map((feature, index) => ({
-      label: `Feature ${index + 1}`,
-      value: feature
-    })),
+    sizes,
+    categories: apiProduct.category ? [apiProduct.category.slug] : [],
+    features: [],
     benefits: [],
     description: apiProduct.description ? [apiProduct.description] : [],
     images,
-    badge: apiProduct.is_featured ? "Bestseller" : undefined,
     featured: apiProduct.is_featured,
     addedAt: apiProduct.created_at,
-    popularity: apiProduct.is_featured ? 100 : 0,
   };
 }

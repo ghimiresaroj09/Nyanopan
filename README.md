@@ -75,6 +75,10 @@ src/
 
 ## Scripts
 
+For local development, copy `.env.example` to `.env.local` before starting
+Next.js. In PowerShell, run `Copy-Item .env.example .env.local`. The local
+environment file is gitignored.
+
 ```bash
 npm run dev       # start the development server
 npm run build     # production build
