@@ -3,20 +3,12 @@ import { getSiteConfiguration } from "@/lib/api/config";
 /**
  * Resolves the canonical site URL for metadata, sitemap and robots.
  *
- * Priority:
- *  1. NEXT_PUBLIC_SITE_URL (set explicitly, e.g. after connecting a custom domain)
- *  2. Vercel-provided production URL (automatic on Vercel)
- *  3. Vercel preview URL (automatic on preview deployments)
- *  4. localhost (local development)
+ * NEXT_PUBLIC_SITE_URL is required for the production canonical URL.
+ * Local development falls back to localhost.
  */
 function resolveSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  }
-  const vercelUrl =
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
-  if (vercelUrl) {
-    return `https://${vercelUrl}`;
   }
   return "http://localhost:3000";
 }

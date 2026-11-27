@@ -33,6 +33,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   experimental: {
     cpus: 1,
   },

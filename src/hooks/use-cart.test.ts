@@ -30,13 +30,13 @@ describe("cart store", () => {
 
   it("adds a line and opens the drawer", () => {
     const { result } = renderHook(() => useCart());
-    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", 42));
+    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", "42"));
     expect(result.current.isOpen).toBe(true);
     expect(result.current.lines).toHaveLength(1);
     expect(result.current.lines[0]).toMatchObject({
       productSlug: "mula-grey",
       colorName: "Grey",
-      size: 42,
+      size: "42",
       quantity: 1,
       unitPrice: 49.95,
     });
@@ -45,8 +45,8 @@ describe("cart store", () => {
   it("merges identical product, colour and size into one line", () => {
     const { result } = renderHook(() => useCart());
     act(() => {
-      cart.add(makeProduct(), "Grey", "grey.jpg", 42);
-      cart.add(makeProduct(), "Grey", "grey.jpg", 42);
+      cart.add(makeProduct(), "Grey", "grey.jpg", "42");
+      cart.add(makeProduct(), "Grey", "grey.jpg", "42");
     });
     expect(result.current.lines).toHaveLength(1);
     expect(result.current.lines[0].quantity).toBe(2);
@@ -54,7 +54,7 @@ describe("cart store", () => {
 
   it("can add without opening the drawer", () => {
     const { result } = renderHook(() => useCart());
-    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", 42, 1, { openDrawer: false }));
+    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", "42", 1, { openDrawer: false }));
     expect(result.current.isOpen).toBe(false);
     expect(result.current.lines).toHaveLength(1);
   });
@@ -62,16 +62,16 @@ describe("cart store", () => {
   it("keeps different colours and sizes on separate lines", () => {
     const { result } = renderHook(() => useCart());
     act(() => {
-      cart.add(makeProduct(), "Grey", "grey.jpg", 42);
-      cart.add(makeProduct(), "Grey", "grey.jpg", 43);
-      cart.add(makeProduct(), "Blue", "blue.jpg", 42);
+      cart.add(makeProduct(), "Grey", "grey.jpg", "42");
+      cart.add(makeProduct(), "Grey", "grey.jpg", "43");
+      cart.add(makeProduct(), "Blue", "blue.jpg", "42");
     });
     expect(result.current.lines).toHaveLength(3);
   });
 
   it("removes a line when the quantity drops below one", () => {
     const { result } = renderHook(() => useCart());
-    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", 42));
+    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", "42"));
     const id = result.current.lines[0].id;
     act(() => cart.setQuantity(id, 0));
     expect(result.current.lines).toEqual([]);
@@ -79,7 +79,7 @@ describe("cart store", () => {
 
   it("updates a quantity explicitly", () => {
     const { result } = renderHook(() => useCart());
-    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", 42));
+    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", "42"));
     const id = result.current.lines[0].id;
     act(() => cart.setQuantity(id, 4));
     expect(result.current.lines[0].quantity).toBe(4);
@@ -89,8 +89,8 @@ describe("cart store", () => {
     const { result } = renderHook(() => useCartSubtotal());
     expect(result.current).toBe(0);
     act(() => {
-      cart.add(makeProduct(), "Grey", "grey.jpg", 42);
-      cart.add(makeProduct({ slug: "slipa", price: 44.95 }), "Natural", "natural.jpg", 41);
+      cart.add(makeProduct(), "Grey", "grey.jpg", "42");
+      cart.add(makeProduct({ slug: "slipa", price: 44.95 }), "Natural", "natural.jpg", "41");
     });
     expect(result.current).toBe(94.9);
   });
@@ -98,31 +98,31 @@ describe("cart store", () => {
   it("counts the total number of items", () => {
     const { result } = renderHook(() => useCartCount());
     act(() => {
-      cart.add(makeProduct(), "Grey", "grey.jpg", 42);
-      cart.add(makeProduct(), "Grey", "grey.jpg", 42);
-      cart.add(makeProduct({ slug: "slipa", price: 44.95 }), "Natural", "natural.jpg", 41);
+      cart.add(makeProduct(), "Grey", "grey.jpg", "42");
+      cart.add(makeProduct(), "Grey", "grey.jpg", "42");
+      cart.add(makeProduct({ slug: "slipa", price: 44.95 }), "Natural", "natural.jpg", "41");
     });
     expect(result.current).toBe(3);
   });
 
   it("clears all lines", () => {
-    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", 42));
+    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", "42"));
     expect(cart.getSnapshot().lines).toHaveLength(1);
     act(() => cart.clear());
     expect(cart.getSnapshot().lines).toHaveLength(0);
   });
 
   it("persists lines to localStorage for long-term storage", () => {
-    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", 42));
+    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", "42"));
     const raw = window.localStorage.getItem(STORAGE_KEY);
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw as string);
     expect(parsed).toHaveLength(1);
-    expect(parsed[0].size).toBe(42);
+    expect(parsed[0].size).toBe("42");
   });
 
   it("restores persisted lines on hydrate", () => {
-    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", 42));
+    act(() => cart.add(makeProduct(), "Grey", "grey.jpg", "42"));
     const saved = window.localStorage.getItem(STORAGE_KEY) as string;
     act(() => cart.clear());
     const { result } = renderHook(() => useCart());

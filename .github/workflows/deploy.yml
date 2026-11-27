@@ -1,0 +1,216 @@
+name: CI and DirectAdmin deployment
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality checks and standalone build
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ vars.NEXT_PUBLIC_BACKEND_URL }}
+    outputs:
+      release_id: ${{ steps.package.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.3
+          cache: npm
+
+      - name: Validate build environment
+        run: |
+          set -euo pipefail
+          test -n "$NEXT_PUBLIC_SITE_URL" || { echo "::error::NEXT_PUBLIC_SITE_URL repository variable is required"; exit 1; }
+          test -n "$NEXT_PUBLIC_BACKEND_URL" || { echo "::error::NEXT_PUBLIC_BACKEND_URL repository variable is required"; exit 1; }
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Package and inspect standalone release
+        id: package
+        run: |
+          set -euo pipefail
+          release_id="${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          standalone=".next/standalone"
+          test -f "$standalone/server.js"
+          test -d "$standalone/node_modules"
+          test -d "$standalone/.next"
+          test -f "$standalone/.next/BUILD_ID"
+
+          mkdir -p "$standalone/.next/static" "$standalone/public"
+          cp -a .next/static/. "$standalone/.next/static/"
+          if [ -d public ]; then
+            cp -a public/. "$standalone/public/"
+          fi
+          printf '%s\n' "$release_id" > "$standalone/.next/static/deployment-id-${release_id}.txt"
+
+          tar -czf deploy-release.tar.gz -C "$standalone" .
+          tar -tzf deploy-release.tar.gz > deploy-release.contents
+          sed 's#^\./##' deploy-release.contents > deploy-release.paths
+          grep -Fxq 'server.js' deploy-release.paths
+          grep -Fxq 'node_modules/next/package.json' deploy-release.paths
+          grep -Fxq '.next/BUILD_ID' deploy-release.paths
+          grep -Fxq ".next/static/deployment-id-${release_id}.txt" deploy-release.paths
+
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nyanopan-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: deploy-release.tar.gz
+          if-no-files-found: error
+          retention-days: 5
+
+  deploy:
+    name: Deploy to DirectAdmin / CloudLinux Passenger
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: nyanopan-production-deploy
+      cancel-in-progress: false
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USERNAME: ${{ vars.DEPLOY_USERNAME }}
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_APP_JS_REVIEWED: ${{ vars.DEPLOY_APP_JS_REVIEWED }}
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ vars.NEXT_PUBLIC_BACKEND_URL }}
+      RELEASE_ID: ${{ needs.quality.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nyanopan-release-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Validate deployment settings and configure SSH
+        run: |
+          set -euo pipefail
+          for name in DEPLOY_HOST DEPLOY_USERNAME DEPLOY_PORT DEPLOY_PATH DEPLOY_KNOWN_HOSTS DEPLOY_APP_JS_REVIEWED DEPLOY_SSH_PRIVATE_KEY NEXT_PUBLIC_SITE_URL NEXT_PUBLIC_BACKEND_URL RELEASE_ID; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::$name is required"
+              exit 1
+            fi
+          done
+          [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || { echo "::error::DEPLOY_HOST must be a DNS name or IPv4 address"; exit 1; }
+          [[ "$DEPLOY_USERNAME" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::DEPLOY_USERNAME contains unsupported characters"; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "::error::DEPLOY_PORT must be a number"; exit 1; }
+          port_number=$((10#$DEPLOY_PORT))
+          (( port_number >= 1 && port_number <= 65535 )) || { echo "::error::DEPLOY_PORT must be between 1 and 65535"; exit 1; }
+          [[ "$DEPLOY_PATH" == "/home2/nyanopan/nyanopan-storefront" ]] || { echo "::error::DEPLOY_PATH must match the configured DirectAdmin application root"; exit 1; }
+          [[ ! "$DEPLOY_PATH" =~ (^|/)\.\.(/|$) ]] || { echo "::error::DEPLOY_PATH cannot contain parent-directory segments"; exit 1; }
+          [[ "$NEXT_PUBLIC_SITE_URL" == "https://nyanopan.com" ]] || { echo "::error::NEXT_PUBLIC_SITE_URL must be https://nyanopan.com for production"; exit 1; }
+          [[ "$NEXT_PUBLIC_BACKEND_URL" == "https://api.nyanopan.com" ]] || { echo "::error::NEXT_PUBLIC_BACKEND_URL must be https://api.nyanopan.com for production"; exit 1; }
+          [[ "$DEPLOY_APP_JS_REVIEWED" == "true" ]] || { echo "::error::Review the existing server-side app.js, then set DEPLOY_APP_JS_REVIEWED=true"; exit 1; }
+          [[ "$RELEASE_ID" =~ ^[0-9a-f]{40}-[0-9]+-[0-9]+$ ]] || { echo "::error::Invalid release identifier"; exit 1; }
+
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/deploy_key" >/dev/null
+
+      - name: Upload and activate versioned release
+        id: activate
+        run: |
+          set -euo pipefail
+          remote="$DEPLOY_USERNAME@$DEPLOY_HOST"
+          ssh_options=(-i "$HOME/.ssh/deploy_key" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o BatchMode=yes -o ConnectTimeout=15)
+          ssh "${ssh_options[@]}" -p "$DEPLOY_PORT" "$remote" "test -d '$DEPLOY_PATH'"
+          scp "${ssh_options[@]}" -P "$DEPLOY_PORT" deploy-release.tar.gz "$remote:$DEPLOY_PATH/.deploy-${RELEASE_ID}.tar.gz"
+          scp "${ssh_options[@]}" -P "$DEPLOY_PORT" scripts/deploy-directadmin.sh "$remote:$DEPLOY_PATH/.deploy-script-${RELEASE_ID}.sh"
+          scp "${ssh_options[@]}" -P "$DEPLOY_PORT" app.js "$remote:$DEPLOY_PATH/.deploy-app-${RELEASE_ID}.js"
+
+          echo "activation_attempted=true" >> "$GITHUB_OUTPUT"
+          ssh "${ssh_options[@]}" -p "$DEPLOY_PORT" "$remote" \
+            "chmod 700 '$DEPLOY_PATH/.deploy-script-${RELEASE_ID}.sh' && bash '$DEPLOY_PATH/.deploy-script-${RELEASE_ID}.sh' activate '$DEPLOY_PATH' '$RELEASE_ID'"
+
+      - name: Verify the deployed storefront and release
+        id: verify
+        run: |
+          set -euo pipefail
+          body="$(mktemp)"
+          marker="$(mktemp)"
+          trap 'rm -f "$body" "$marker"' EXIT
+
+          for attempt in $(seq 1 12); do
+            status="$(curl --silent --show-error --location --max-time 20 --output "$body" --write-out '%{http_code}' "$NEXT_PUBLIC_SITE_URL/")" || status=000
+            if [[ "$status" == 200 ]] \
+              && grep -Eiq '<title[^>]*>[^<]*Nyanopan' "$body" \
+              && grep -Fq 'https://nyanopan.com' "$body"; then
+              marker_status="$(curl --silent --show-error --location --max-time 20 --output "$marker" --write-out '%{http_code}' "$NEXT_PUBLIC_SITE_URL/_next/static/deployment-id-${RELEASE_ID}.txt")" || marker_status=000
+              if [[ "$marker_status" == 200 ]] && grep -Fxq "$RELEASE_ID" "$marker"; then
+                echo "Verified Nyanopan storefront and release $RELEASE_ID (HTTP 200)."
+                exit 0
+              fi
+            fi
+            echo "Production verification attempt $attempt/12 did not identify the new storefront release (home HTTP ${status:-unknown})."
+            sleep 10
+          done
+          echo "::error::Production verification failed: expected Nyanopan storefront HTML and deployment marker for $RELEASE_ID."
+          exit 1
+
+      - name: Roll back failed activation
+        id: rollback
+        if: failure() && steps.activate.outputs.activation_attempted == 'true'
+        run: |
+          set -euo pipefail
+          remote="$DEPLOY_USERNAME@$DEPLOY_HOST"
+          rollback_output="$(ssh -i "$HOME/.ssh/deploy_key" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o BatchMode=yes -p "$DEPLOY_PORT" "$remote" \
+            "bash '$DEPLOY_PATH/.deploy-script-${RELEASE_ID}.sh' rollback '$DEPLOY_PATH' '$RELEASE_ID'")"
+          printf '%s\n' "$rollback_output"
+          rollback_release="$(printf '%s\n' "$rollback_output" | sed -n 's/^ROLLBACK_RELEASE=//p' | tail -n 1)"
+          test -n "$rollback_release" || { echo "::error::Rollback did not report the restored release"; exit 1; }
+          echo "release=$rollback_release" >> "$GITHUB_OUTPUT"
+
+      - name: Verify rollback
+        if: failure() && steps.rollback.outcome == 'success'
+        run: |
+          set -euo pipefail
+          body="$(mktemp)"
+          trap 'rm -f "$body"' EXIT
+          for attempt in $(seq 1 6); do
+            status="$(curl --silent --show-error --location --max-time 20 --output "$body" --write-out '%{http_code}' "$NEXT_PUBLIC_SITE_URL/")" || status=000
+            if [[ "$status" == 200 ]] && grep -Eiq '<title[^>]*>[^<]*Nyanopan' "$body" && grep -Fq 'https://nyanopan.com' "$body"; then
+              echo "Rollback release ${{ steps.rollback.outputs.release }} serves the Nyanopan storefront (HTTP 200)."
+              exit 0
+            fi
+            echo "Rollback verification attempt $attempt/6 failed (home HTTP ${status:-unknown})."
+            sleep 10
+          done
+          echo "::error::Rollback completed but the restored storefront did not pass the health check."
+          exit 1
+
+      - name: Remove deployment staging files
+        if: (success() || steps.rollback.outcome == 'success') && steps.activate.outputs.activation_attempted == 'true'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          remote="$DEPLOY_USERNAME@$DEPLOY_HOST"
+          ssh -i "$HOME/.ssh/deploy_key" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o BatchMode=yes -p "$DEPLOY_PORT" "$remote" \
+            "if test -f '$DEPLOY_PATH/.deploy-script-${RELEASE_ID}.sh'; then bash '$DEPLOY_PATH/.deploy-script-${RELEASE_ID}.sh' finalize '$DEPLOY_PATH' '$RELEASE_ID'; fi"

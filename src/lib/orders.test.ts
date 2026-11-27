@@ -18,7 +18,7 @@ function makeDraft(overrides: Partial<OrderDraft> = {}): OrderDraft {
         slug: "mula-grey",
         name: "Mula Wool Felt Slippers Grey",
         colorName: "Grey",
-        size: 42,
+        size: "42",
         quantity: 1,
         unitPrice: 49.95,
         image: "grey.jpg",
@@ -53,7 +53,7 @@ describe("placeOrder", () => {
   it("stores the full order data", () => {
     const order = placeOrder(makeDraft());
     expect(order.status).toBe("Confirmed");
-    expect(order.lines[0].size).toBe(42);
+    expect(order.lines[0].size).toBe("42");
     expect(order.total).toBe(149.95);
     expect(new Date(order.placedAt).getTime()).toBeGreaterThan(0);
     expect(order.address.fullName).toBe("Shyam Thapa");

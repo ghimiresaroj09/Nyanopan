@@ -70,13 +70,13 @@ describe.skip("filterProducts", () => {
   });
 
   it("filters by available size", () => {
-    const result = filterProducts(all, { ...EMPTY_FILTERS, sizes: [48] }, "featured");
+    const result = filterProducts(all, { ...EMPTY_FILTERS, sizes: ["48"] }, "featured");
     expect(result.length).toBeGreaterThan(0);
-    expect(result.every((p) => p.sizes.includes(48))).toBe(true);
+    expect(result.every((p) => p.sizes.some((size) => size.name === "48"))).toBe(true);
   });
 
   it("returns an empty list when nothing matches", () => {
-    const result = filterProducts(all, { ...EMPTY_FILTERS, sizes: [16] }, "featured");
+    const result = filterProducts(all, { ...EMPTY_FILTERS, sizes: ["16"] }, "featured");
     expect(result).toEqual([]);
   });
 });

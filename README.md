@@ -94,42 +94,140 @@ npm run test:watch  # run tests in watch mode
   the shipping rules, form schemas, formatting helpers, the demo auth
   service (registration, sign in, profile, password, addresses), the
   demo order store and the wishlist store.
-- **CI (GitHub Actions)** runs lint, tests and a production build on
-  every push to main and every pull request. See `.github/workflows/ci.yml`.
+- **CI (GitHub Actions)** runs lint, TypeScript, tests, and a production build
+  for pushes to `main` and pull requests targeting `main`. See
+  `.github/workflows/deploy.yml`.
 
-## Deploying to Vercel
+## Deploying to DirectAdmin / CloudLinux Passenger
 
-Production deployments are automated through GitHub Actions. Pull requests
-run the quality checks; pushes to `main` deploy to Vercel after all checks
-pass.
+Pull requests targeting `main` run ESLint, TypeScript, tests, and a production
+standalone build. A successful push to `main` deploys automatically over SSH
+and verifies the live release at `https://nyanopan.com`.
 
-1. Push the project to a Git repository (GitHub, GitLab or Bitbucket).
-   If this folder is not a repository yet, run `git init` and commit first.
-2. Create or import the project in Vercel. Set `NEXT_PUBLIC_BACKEND_URL` to
-   the backend origin used by API requests and the Content Security Policy.
-   The canonical URL can be set explicitly
-   with `NEXT_PUBLIC_SITE_URL`; if omitted, the app derives it from Vercel's
-   own environment variables (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`).
-3. In GitHub, add these repository Actions secrets under
-   **Settings > Secrets and variables > Actions**:
-   `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`. The Vercel IDs
-   are available in the linked project's `.vercel/project.json` after running
-   `vercel link`.
-4. If the repository is connected to Vercel's Git deployment integration,
-   disable its automatic production deployment to avoid deploying each push
-   twice. GitHub Actions owns production deployment.
+The workflow targets Node.js **24.22.3** and the existing application root
+`/home2/nyanopan/nyanopan-storefront`. It creates an immutable directory under
+`releases/<commit>-<run>-<attempt>` and atomically switches the `releases/current`
+symlink only after validating the archive. It does not extract over the
+application root; `.htaccess`, `Public`, `tmp`, and other existing root files
+are left in place. Old releases are retained for rollback.
 
-After connecting a custom domain, set the canonical URL explicitly:
+### DirectAdmin / Passenger setup
 
-| Variable               | Purpose                                    | Required |
-| ---------------------- | ------------------------------------------ | -------- |
-| `NEXT_PUBLIC_SITE_URL` | Canonical production URL (e.g. the custom domain) | No (falls back to the Vercel URL) |
-| `NEXT_PUBLIC_BACKEND_URL` | Backend origin for API requests and CSP | Yes |
+Keep the existing Passenger application root, virtual-environment Node binary,
+and startup filename:
 
-See `.env.example`. CI checks use these example values; Vercel production
-builds load the project's configured environment with `vercel pull`.
-`NEXT_PUBLIC_SITE_URL` can be omitted on Vercel; `NEXT_PUBLIC_BACKEND_URL` is
-required.
+```apache
+PassengerAppRoot "/home2/nyanopan/nyanopan-storefront"
+PassengerBaseURI "/"
+PassengerNodejs "/home2/nyanopan/nodevenv/nyanopan-storefront/24/bin/node"
+PassengerAppType node
+PassengerStartupFile app.js
+```
+
+The repository's `app.js` is a small production wrapper that loads
+`releases/current/server.js`. On the first successful activation, the deploy
+script preserves the existing server-side `app.js` at
+`deploy-backups/app.js.before-standalone` before installing the wrapper. If
+production verification fails, the workflow restores the previous release or,
+on the first deployment, the original `app.js`, and restarts Passenger.
+The deployment never removes `tmp`, `Public`, `.htaccess`, or prior releases.
+
+In DirectAdmin, confirm the application is set to Node.js **24.22.3**, its root
+matches the path above, startup file is `app.js`, and application mode is
+production. Set `NODE_ENV=production`,
+`NEXT_PUBLIC_SITE_URL=https://nyanopan.com`, and
+`NEXT_PUBLIC_BACKEND_URL=https://api.nyanopan.com` in the app environment.
+The `.htaccess` Passenger restart directory remains `tmp/`; deployments touch
+`tmp/restart.txt`.
+
+Passenger's documented Node.js auto-install mode intercepts the application's
+first HTTP server `listen()` and binds it to a Passenger-managed Unix socket.
+The generated Next.js standalone server uses one HTTP server and reads its
+normal `PORT`/hostname settings; it does not create a separate listener in the
+wrapper. This is compatible with Passenger's documented reverse-port-binding
+model ([Passenger documentation](https://www.phusionpassenger.com/docs/advanced_guides/in_depth/node/reverse_port_binding.html)),
+but the first deployment must still be observed on the actual
+CloudLinux host. The remote `app.js` is not present in this repository, so the
+workflow preserves it before replacement rather than assuming its contents.
+Before enabling the first production push, inspect that server-side file over
+SSH. The workflow retains an exact backup, but any host-specific startup logic
+must be carried into the wrapper deliberately. The deploy preflight also stops
+if the existing `app.js` is a symlink or has already been changed outside the
+managed deployment process.
+
+### GitHub Actions variables and secret
+
+Under **Settings > Secrets and variables > Actions**, add these repository
+variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `DEPLOY_HOST` | SSH hostname for the Himalayan Host server |
+| `DEPLOY_USERNAME` | SSH account username |
+| `DEPLOY_PORT` | Actual SSH port; required, with no SFTP-port assumption |
+| `DEPLOY_PATH` | `/home2/nyanopan/nyanopan-storefront` |
+| `DEPLOY_KNOWN_HOSTS` | Verified known-hosts line for the host and SSH port |
+| `DEPLOY_APP_JS_REVIEWED` | Set to `true` after reviewing the current server-side startup file |
+| `NEXT_PUBLIC_SITE_URL` | `https://nyanopan.com` |
+| `NEXT_PUBLIC_BACKEND_URL` | `https://api.nyanopan.com` |
+
+Add `DEPLOY_SSH_PRIVATE_KEY` as a repository secret. Use a dedicated SSH key
+with write access only to the application account/path where possible. Obtain
+the SSH port and host-key fingerprint from Himalayan Host or the DirectAdmin
+server administrator; do not infer the SSH port from SFTP (including port
+8186), and compare any `ssh-keyscan` result against a trusted fingerprint
+before saving it as `DEPLOY_KNOWN_HOSTS`. SSH runs with strict host-key
+checking and `IdentitiesOnly=yes`. The workflow refuses deployment until
+`DEPLOY_APP_JS_REVIEWED=true`, confirming that the existing server-side
+`app.js` was inspected and any host-specific startup logic accounted for.
+
+### Deployment validation and rollback
+
+After activation, the workflow retries the production URL check. It requires
+HTTP 200, Nyanopan page title and canonical URL, and a static deployment marker
+matching the exact release ID; a DirectAdmin default page or a stale release
+does not pass. Failed verification triggers rollback and Passenger restart.
+Releases are not automatically pruned, so rollback copies are retained; remove
+old release directories manually only after confirming they are no longer
+needed. To manually roll back, choose a previous release ID under `releases/`,
+then from the application root run:
+
+```bash
+ln -s PREVIOUS_RELEASE_ID releases/.current-manual-rollback
+mv -Tf releases/.current-manual-rollback releases/current
+touch tmp/restart.txt
+```
+
+Replace `PREVIOUS_RELEASE_ID` with the exact existing directory name. Actual
+SSH deployment and CloudLinux socket behavior cannot be validated from a
+local build. If you need to return to the pre-pipeline application after the
+first deployment, restore the preserved startup file and remove only the
+`current` symlink:
+
+```bash
+cp -p deploy-backups/app.js.before-standalone app.js
+rm -- releases/current
+touch tmp/restart.txt
+```
+
+Local checks:
+
+```powershell
+npm ci
+$env:NEXT_PUBLIC_SITE_URL = "https://nyanopan.com"
+$env:NEXT_PUBLIC_BACKEND_URL = "https://api.nyanopan.com"
+npm run lint
+npx tsc --noEmit
+npm test
+npm run build
+Test-Path .next\standalone\server.js
+Test-Path .next\standalone\node_modules\next\package.json
+Test-Path .next\standalone\.next\static
+Test-Path .next\standalone\public
+```
+
+On Linux, also check the deployment script with
+`bash -n scripts/deploy-directadmin.sh`.
 
 ### Launch checklist
 
@@ -144,6 +242,6 @@ Already in place in this codebase:
 
 To do at launch time (requires your accounts and credentials):
 
-- Connect the custom domain in Vercel and set `NEXT_PUBLIC_SITE_URL`
+- Configure the custom domain in DirectAdmin and set `NEXT_PUBLIC_SITE_URL`
 - Replace `support@nyanopan-store.example` with a real support address
 - Connect a payment provider (the checkout is a demo form today)
