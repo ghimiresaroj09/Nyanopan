@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { backendApiUrl } from "@/lib/api/backend";
 
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/delivery-locations/";
+const BACKEND_API_URL = backendApiUrl("delivery-locations/");
 
 export async function GET() {
   try {

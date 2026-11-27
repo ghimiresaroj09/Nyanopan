@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { backendApiUrl } from "@/lib/api/backend";
 
 interface ContactFormData {
   name: string;
@@ -8,7 +9,7 @@ interface ContactFormData {
   message: string;
 }
 
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/contact-us/";
+const BACKEND_API_URL = backendApiUrl("contact-us/");
 
 export async function POST(request: NextRequest) {
   try {

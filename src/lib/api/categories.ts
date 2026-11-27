@@ -1,4 +1,6 @@
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/categories/";
+import { backendApiUrl } from "./backend";
+
+const BACKEND_API_URL = backendApiUrl("categories/");
 
 export interface CategoryImage {
   url: string;

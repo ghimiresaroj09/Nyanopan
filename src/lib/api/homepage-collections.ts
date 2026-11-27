@@ -1,4 +1,6 @@
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/homepage/collections/";
+import { backendApiUrl } from "./backend";
+
+const BACKEND_API_URL = backendApiUrl("homepage/collections/");
 
 export interface HomepageCollection {
   image: string;

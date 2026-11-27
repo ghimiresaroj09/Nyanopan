@@ -1,4 +1,6 @@
-const API_BASE_URL = "https://nyanopan.onrender.com/api/v1";
+import { BACKEND_API_BASE_URL } from "./backend";
+
+const API_BASE_URL = BACKEND_API_BASE_URL;
 
 export interface FAQ {
   id: string;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { backendApiUrl } from "@/lib/api/backend";
 
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/checkout/";
+const BACKEND_API_URL = backendApiUrl("checkout/");
 
 export async function POST(request: NextRequest) {
   try {

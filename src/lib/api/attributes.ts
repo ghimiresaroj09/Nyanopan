@@ -1,4 +1,6 @@
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/attributes/";
+import { backendApiUrl } from "./backend";
+
+const BACKEND_API_URL = backendApiUrl("attributes/");
 
 export interface AttributeValue {
   id: string;

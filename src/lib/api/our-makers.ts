@@ -1,4 +1,6 @@
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/our-makers/";
+import { backendApiUrl } from "./backend";
+
+const BACKEND_API_URL = backendApiUrl("our-makers/");
 
 export interface TeamMember {
   name: string;

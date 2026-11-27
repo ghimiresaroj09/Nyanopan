@@ -1,4 +1,6 @@
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/policies/";
+import { backendApiUrl } from "./backend";
+
+const BACKEND_API_URL = backendApiUrl("policies/");
 
 export type PolicyType = "SHIPPING" | "EXCHANGES_RETURNS" | "PRIVACY_POLICY" | "TERMS_CONDITIONS";
 

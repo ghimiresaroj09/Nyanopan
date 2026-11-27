@@ -1,4 +1,6 @@
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/our-story/";
+import { backendApiUrl } from "./backend";
+
+const BACKEND_API_URL = backendApiUrl("our-story/");
 
 export interface OurStorySection {
   title: string;

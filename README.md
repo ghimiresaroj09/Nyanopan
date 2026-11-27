@@ -102,19 +102,20 @@ The project is configured for Vercel out of the box:
 2. Go to vercel.com/new and import the repository. The framework is
    detected automatically; `vercel.json` pins the build settings
    (`npm ci` and `npm run build`) and deploys to the Frankfurt region.
-3. No environment variables are required. Without any configuration the
-   app derives its canonical URL from Vercel's own environment variables
-   (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`), so sitemap.xml,
-   robots.txt and page metadata are correct on the very first deploy.
+3. Set `NEXT_PUBLIC_BACKEND_URL` to the backend origin used by API requests
+   and the Content Security Policy. The canonical URL can be set explicitly
+   with `NEXT_PUBLIC_SITE_URL`; if omitted, the app derives it from Vercel's
+   own environment variables (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`).
 
 After connecting a custom domain, set the canonical URL explicitly:
 
 | Variable               | Purpose                                    | Required |
 | ---------------------- | ------------------------------------------ | -------- |
 | `NEXT_PUBLIC_SITE_URL` | Canonical production URL (e.g. the custom domain) | No (falls back to the Vercel URL) |
+| `NEXT_PUBLIC_BACKEND_URL` | Backend origin for API requests and CSP | Yes |
 
-See `.env.example`. Vercel preview deployments keep working without this
-variable.
+See `.env.example`. Vercel preview deployments can omit `NEXT_PUBLIC_SITE_URL`;
+`NEXT_PUBLIC_BACKEND_URL` is still required.
 
 ### Launch checklist
 

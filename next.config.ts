@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { BACKEND_ORIGIN } from "./src/lib/api/backend";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -14,7 +15,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://images.unsplash.com https://*.googleapis.com https://*.gstatic.com https://res.cloudinary.com",
   "font-src 'self'",
-  `connect-src 'self' https://nyanopan.onrender.com${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self' ${BACKEND_ORIGIN}${isDev ? " ws: wss:" : ""}`,
   "frame-src 'self' https://www.google.com https://maps.google.com",
   "object-src 'none'",
   "base-uri 'self'",

@@ -1,4 +1,6 @@
-const BACKEND_API_URL = "https://nyanopan.onrender.com/api/v1/configuration/";
+import { backendApiUrl } from "./backend";
+
+const BACKEND_API_URL = backendApiUrl("configuration/");
 
 export interface SiteConfiguration {
   company_intro: string;
