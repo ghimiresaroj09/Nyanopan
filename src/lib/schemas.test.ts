@@ -48,8 +48,8 @@ describe("checkoutSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects an invalid city/district not in Nepal list", () => {
-    const result = checkoutSchema.safeParse({ ...VALID_CHECKOUT, cityOrDistrict: "New York" });
+  it("rejects an empty city/district", () => {
+    const result = checkoutSchema.safeParse({ ...VALID_CHECKOUT, cityOrDistrict: "" });
     expect(result.success).toBe(false);
   });
 

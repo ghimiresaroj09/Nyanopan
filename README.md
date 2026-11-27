@@ -99,17 +99,25 @@ npm run test:watch  # run tests in watch mode
 
 ## Deploying to Vercel
 
-The project is configured for Vercel out of the box:
+Production deployments are automated through GitHub Actions. Pull requests
+run the quality checks; pushes to `main` deploy to Vercel after all checks
+pass.
 
 1. Push the project to a Git repository (GitHub, GitLab or Bitbucket).
    If this folder is not a repository yet, run `git init` and commit first.
-2. Go to vercel.com/new and import the repository. The framework is
-   detected automatically; `vercel.json` pins the build settings
-   (`npm ci` and `npm run build`) and deploys to the Frankfurt region.
-3. Set `NEXT_PUBLIC_BACKEND_URL` to the backend origin used by API requests
-   and the Content Security Policy. The canonical URL can be set explicitly
+2. Create or import the project in Vercel. Set `NEXT_PUBLIC_BACKEND_URL` to
+   the backend origin used by API requests and the Content Security Policy.
+   The canonical URL can be set explicitly
    with `NEXT_PUBLIC_SITE_URL`; if omitted, the app derives it from Vercel's
    own environment variables (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`).
+3. In GitHub, add these repository Actions secrets under
+   **Settings > Secrets and variables > Actions**:
+   `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`. The Vercel IDs
+   are available in the linked project's `.vercel/project.json` after running
+   `vercel link`.
+4. If the repository is connected to Vercel's Git deployment integration,
+   disable its automatic production deployment to avoid deploying each push
+   twice. GitHub Actions owns production deployment.
 
 After connecting a custom domain, set the canonical URL explicitly:
 
@@ -118,8 +126,10 @@ After connecting a custom domain, set the canonical URL explicitly:
 | `NEXT_PUBLIC_SITE_URL` | Canonical production URL (e.g. the custom domain) | No (falls back to the Vercel URL) |
 | `NEXT_PUBLIC_BACKEND_URL` | Backend origin for API requests and CSP | Yes |
 
-See `.env.example`. Vercel preview deployments can omit `NEXT_PUBLIC_SITE_URL`;
-`NEXT_PUBLIC_BACKEND_URL` is still required.
+See `.env.example`. CI checks use these example values; Vercel production
+builds load the project's configured environment with `vercel pull`.
+`NEXT_PUBLIC_SITE_URL` can be omitted on Vercel; `NEXT_PUBLIC_BACKEND_URL` is
+required.
 
 ### Launch checklist
 
