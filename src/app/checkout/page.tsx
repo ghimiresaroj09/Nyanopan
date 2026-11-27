@@ -46,9 +46,40 @@ type FormErrors = Partial<Record<keyof FormState, string>>;
 interface DeliveryLocation {
   id: string;
   name: string;
-  delivery_charge: string;
+  delivery_charge: string | number;
   is_free: boolean;
   effective_charge: number;
+}
+
+function parseDeliveryLocations(payload: unknown): DeliveryLocation[] {
+  const root = payload as any;
+  const collection = Array.isArray(root)
+    ? root
+    : Array.isArray(root?.data)
+      ? root.data
+      : Array.isArray(root?.data?.results)
+        ? root.data.results
+        : Array.isArray(root?.results)
+          ? root.results
+          : null;
+
+  if (!collection) throw new Error("Invalid delivery locations response");
+
+  return collection.map((item: any) => {
+    const charge = Number(item.delivery_charge ?? item.charge ?? 0);
+    const free = Boolean(item.is_free ?? item.free_delivery ?? false);
+    const effectiveCharge = Number(item.effective_charge ?? (free ? 0 : charge));
+    if (item.id == null || typeof item.name !== "string" || !Number.isFinite(effectiveCharge)) {
+      throw new Error("Invalid delivery location");
+    }
+    return {
+      id: String(item.id),
+      name: item.name,
+      delivery_charge: item.delivery_charge ?? charge,
+      is_free: free || effectiveCharge === 0,
+      effective_charge: effectiveCharge,
+    };
+  });
 }
 
 const INITIAL_FORM: FormState = {
@@ -85,8 +116,7 @@ export default function CheckoutPage() {
       })
       .then((result) => {
         if (!active) return;
-        if (!result.success || !Array.isArray(result.data)) throw new Error("Invalid delivery locations response");
-        setDeliveryLocations(result.data);
+        setDeliveryLocations(parseDeliveryLocations(result));
         setLocationsError(false);
       })
       .catch(() => { if (active) setLocationsError(true); })
