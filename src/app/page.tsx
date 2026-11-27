@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Hero } from "@/components/home/hero";
+import { EditorialHero } from "@/components/home/editorial-hero";
 import { CategoryTiles } from "@/components/home/category-tiles";
 import { FeaturedProducts } from "@/components/home/featured-products";
 import { FairTradeSection } from "@/components/partials/fair-trade-section";
@@ -82,7 +82,8 @@ export default async function HomePage() {
       {/* Structured Data */}
       <OrganizationSchema />
       
-      <Hero />
+      {/* <Hero /> Previous animated hero is preserved in src/components/home/hero.tsx. */}
+      <EditorialHero />
       <CategoryTiles data={collectionsData} />
       <FeaturedProducts />
       <FairTradeSection data={homepageData?.section1} />

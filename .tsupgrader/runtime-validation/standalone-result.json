@@ -1,8 +1,8 @@
 {
-  "planHash": "aa7ca2273a78355cd7062d1a24533142d2b55f18d2132693ec679e29eb8d13b8",
+  "planHash": "940ddea3d60335191464abb4ee5afb98d6f7405215c8188156743568a31d43c4",
   "phase": "standalone",
-  "recordedAtUtc": "2026-11-27T15:15:36.4550122Z",
-  "retryCount": 0,
+  "recordedAtUtc": "2026-11-27T16:06:06.2667654Z",
+  "retryCount": 4,
   "resetBaseline": false,
   "complete": true,
   "result": {
@@ -20,7 +20,7 @@
         "skippedReason": null,
         "exitCode": 0,
         "outputSample": "",
-        "durationMs": 17330
+        "durationMs": 14936
       },
       {
         "name": "production-build",
@@ -31,8 +31,8 @@
         "skipped": false,
         "skippedReason": null,
         "exitCode": 0,
-        "outputSample": "\r\n\u003E nyanopan-store@0.1.0 build\r\n\u003E next build\r\n\r\n   \u25B2 Next.js 15.5.25\r\n   - Environments: .env.local\r\n   - Experiments (use with caution):\r\n     \u00B7 cpus: 1\r\n\r\n   Creating an optimized production build ...\r\n \u2713 Compiled successfully in 9.7s\r\n   Linting and checking validity of types ...\r\n\r\n./src/app/checkout/page.tsx\r\n55:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n68:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n\r\n./src/app/collections/[slug]/page.tsx\r\n29:9  Warning: \u0027productCount\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/app/wishlist/page.tsx\r\n2:8  Warning: \u0027Link\u0027 is defined but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/collection/collection-browser.tsx\r\n49:9  Warning: \u0027sortQuery\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n50:9  Warning: \u0027genderFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n51:9  Warning: \u0027soleFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n52:9  Warning: \u0027usageFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n53:9  Warning: \u0027modelFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/home/featured-products.tsx\r\n6:15  Warning: \u0027Product\u0027 is defined but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/home/hero.tsx\r\n87:10  Warning: \u0027activeStage\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/layout/search-overlay.tsx\r\n4:8  Warning: \u0027Link\u0027 is defined but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/product/product-buy-box.tsx\r\n26:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n38:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n39:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n43:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n44:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n52:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n56:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n60:81  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n64:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n74:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n78:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n90:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n97:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n179:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n210:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n230:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n399:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n\r\n./src/components/product/product-detail.tsx\r\n10:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n16:76  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n17:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n19:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n22:87  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n25:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n26:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-\n\u2026[truncated]",
-        "durationMs": 108867
+        "outputSample": "\r\n\u003E nyanopan-store@0.1.0 build\r\n\u003E next build\r\n\r\n   \u25B2 Next.js 15.5.25\r\n   - Environments: .env.local\r\n   - Experiments (use with caution):\r\n     \u00B7 cpus: 1\r\n\r\n   Creating an optimized production build ...\r\n \u2713 Compiled successfully in 20.9s\r\n   Linting and checking validity of types ...\r\n\r\n./src/app/checkout/page.tsx\r\n55:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n68:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n\r\n./src/app/collections/[slug]/page.tsx\r\n29:9  Warning: \u0027productCount\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/app/wishlist/page.tsx\r\n2:8  Warning: \u0027Link\u0027 is defined but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/collection/collection-browser.tsx\r\n49:9  Warning: \u0027sortQuery\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n50:9  Warning: \u0027genderFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n51:9  Warning: \u0027soleFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n52:9  Warning: \u0027usageFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n53:9  Warning: \u0027modelFilter\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/home/featured-products.tsx\r\n6:15  Warning: \u0027Product\u0027 is defined but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/home/hero.tsx\r\n87:10  Warning: \u0027activeStage\u0027 is assigned a value but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/layout/search-overlay.tsx\r\n4:8  Warning: \u0027Link\u0027 is defined but never used.  @typescript-eslint/no-unused-vars\r\n\r\n./src/components/product/product-buy-box.tsx\r\n26:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n38:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n39:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n43:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n44:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n52:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n56:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n60:81  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n64:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n74:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n78:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n90:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n97:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n179:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n210:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n230:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n399:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n\r\n./src/components/product/product-detail.tsx\r\n10:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n16:76  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n17:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n19:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n22:87  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n25:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any\r\n26:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit\n\u2026[truncated]",
+        "durationMs": 119813
       },
       {
         "name": "tests-pass",
@@ -43,8 +43,8 @@
         "skipped": false,
         "skippedReason": null,
         "exitCode": 0,
-        "outputSample": "\r\n\u003E nyanopan-store@0.1.0 test\r\n\u003E vitest run\r\n\r\n\u001B[33m(!) Your Vite config uses features that are unsupported by \u0060configLoader: \u0027native\u0027\u0060, which is planned to become the default in a future major version of Vite:\r\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a \u0060.mjs\u0060 extension or set \u0060\u0022type\u0022: \u0022module\u0022\u0060 in the closest package.json\r\nSet \u0060VITE_CONFIG_NATIVE_IGNORE_WARNING=true\u0060 to suppress this warning.\u001B[39m\r\n\r\n RUN  v4.1.11 C:/Users/Dell/Documents/Nyanopan/nyanopan-store\r\n\r\n\r\n Test Files  9 passed | 1 skipped (10)\r\n      Tests  54 passed | 13 skipped (67)\r\n   Start at  20:58:15\r\n   Duration  20.75s (transform 2.11s, setup 770ms, import 11.12s, tests 855ms, environment 92.47s)\r\n\r\n",
-        "durationMs": 25364,
+        "outputSample": "\r\n\u003E nyanopan-store@0.1.0 test\r\n\u003E vitest run\r\n\r\n\u001B[33m(!) Your Vite config uses features that are unsupported by \u0060configLoader: \u0027native\u0027\u0060, which is planned to become the default in a future major version of Vite:\r\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a \u0060.mjs\u0060 extension or set \u0060\u0022type\u0022: \u0022module\u0022\u0060 in the closest package.json\r\nSet \u0060VITE_CONFIG_NATIVE_IGNORE_WARNING=true\u0060 to suppress this warning.\u001B[39m\r\n\r\n RUN  v4.1.11 C:/Users/Dell/Documents/Nyanopan/nyanopan-store\r\n\r\n\r\n Test Files  9 passed | 1 skipped (10)\r\n      Tests  54 passed | 13 skipped (67)\r\n   Start at  21:50:41\r\n   Duration  19.64s (transform 1.40s, setup 555ms, import 9.41s, tests 621ms, environment 91.30s)\r\n\r\n",
+        "durationMs": 23657,
         "testResults": {
           "testFramework": "vitest",
           "runnerDetectedFrom": "package_json",
@@ -63,9 +63,9 @@
         "timedOut": false,
         "skipped": false,
         "skippedReason": null,
-        "exitCode": null,
-        "outputSample": "\u003Cprobe error: The operation was canceled.\u003E",
-        "durationMs": 119997
+        "exitCode": 0,
+        "outputSample": "server exited before responding (exit=0)\n--- server output ---\n\r\n\u003E nyanopan-store@0.1.0 dev\r\n\u003E next dev --port 3010\r\n\r\n \u2A2F Failed to start server\r\nError: listen EADDRINUSE: address already in use :::3010\r\n    at \u003Cunknown\u003E (Error: listen EADDRINUSE: address already in use :::3010)\r\n    at new Promise (\u003Canonymous\u003E) {\r\n  code: \u0027EADDRINUSE\u0027,\r\n  errno: -4091,\r\n  syscall: \u0027listen\u0027,\r\n  address: \u0027::\u0027,\r\n  port: 3010\r\n}\r\n\u001B[?25h\r\n",
+        "durationMs": 5290
       }
     ],
     "executions": [
@@ -115,7 +115,10 @@
         "resolvedExecutable": "C:\\Program Files\\nodejs\\npm.CMD",
         "args": [
           "run",
-          "dev"
+          "dev",
+          "--",
+          "--port",
+          "3010"
         ],
         "cwd": "C:\\Users\\Dell\\Documents\\Nyanopan\\nyanopan-store",
         "env": {

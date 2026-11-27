@@ -44,8 +44,8 @@
       "name": "home-route-200",
       "kind": "http-probe",
       "startCommand": "npm",
-      "startArgs": ["run", "dev"],
-      "url": "http://localhost:3000/",
+      "startArgs": ["run", "dev", "--", "--port", "3010"],
+      "url": "http://localhost:3010/",
       "env": {
         "NEXT_PUBLIC_BACKEND_URL": "https://api.nyanopan.com"
       },
