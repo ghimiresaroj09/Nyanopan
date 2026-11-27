@@ -33,7 +33,6 @@ export function MobileMenu({ categories }: MobileMenuProps) {
     },
     { href: "/collections/men", label: "Mens Collections" },
     { href: "/collections/women", label: "Womens Collections" },
-    { href: "/collections/unisex", label: "Unisex Collections" },
     { href: "/wishlist", label: "My Wishlist" },
     { href: "/our-story", label: "Our Story" },
     { href: "/blog", label: "Journal" },

@@ -1,4 +1,4 @@
-import { BACKEND_API_BASE_URL } from "./backend";
+import { BACKEND_API_BASE_URL, fetchNoStore } from "./backend";
 
 const API_BASE_URL = BACKEND_API_BASE_URL;
 
@@ -51,7 +51,7 @@ interface DetailResponse {
 
 export async function getBlogCategories(): Promise<BlogCategory[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/blog-categories/`, { next: { revalidate: 3600 } });
+    const response = await fetchNoStore(`${API_BASE_URL}/blog-categories/`);
     if (!response.ok) return [];
     const body: ListResponse<BlogCategory> = await response.json();
     return body.data?.results ?? [];
@@ -71,7 +71,7 @@ export async function getBlogs(category?: string): Promise<Blog[]> {
 
     while (nextUrl && !visited.has(nextUrl)) {
       visited.add(nextUrl);
-      const response = await fetch(nextUrl, { next: { revalidate: 300 } });
+      const response = await fetchNoStore(nextUrl);
       if (!response.ok) break;
       const body: ListResponse<Blog> = await response.json();
       blogs.push(...(body.data?.results ?? []));
@@ -88,7 +88,7 @@ export async function getBlogs(category?: string): Promise<Blog[]> {
 
 export async function getBlogBySlug(slug: string): Promise<Blog | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/blogs/${encodeURIComponent(slug)}/`, { cache: "no-store" });
+    const response = await fetchNoStore(`${API_BASE_URL}/blogs/${encodeURIComponent(slug)}/`);
     if (response.status === 404) return null;
     if (!response.ok) return null;
     const body: DetailResponse = await response.json();

@@ -1,4 +1,4 @@
-import { BACKEND_API_BASE_URL } from "./backend";
+import { BACKEND_API_BASE_URL, fetchNoStore } from "./backend";
 
 const API_BASE_URL = BACKEND_API_BASE_URL;
 
@@ -25,9 +25,7 @@ interface StandaloneFAQ extends FAQ {
 
 async function fetchJson<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/${path}/`, {
-      next: { revalidate: 3600 },
-    });
+    const response = await fetchNoStore(`${API_BASE_URL}/${path}/`);
     if (!response.ok) return null;
     return await response.json() as T;
   } catch (error) {

@@ -3,7 +3,7 @@ import { HeroImageCarousel } from "@/components/home/hero-image-carousel";
 
 export function EditorialHero() {
   return (
-    <section aria-labelledby="home-hero-title" className="relative overflow-hidden bg-[#f4eee3]">
+    <section aria-labelledby="home-hero-title" className="home-hero relative overflow-hidden bg-[#f4eee3]">
       <div aria-hidden="true" className="absolute inset-y-0 right-0 hidden w-[45%] bg-[#ebe1d2] lg:block" />
 
       <div className="container-page relative grid items-center gap-10 py-12 sm:py-16 lg:min-h-[680px] lg:grid-cols-[0.95fr_1.05fr] lg:gap-8 lg:py-20">

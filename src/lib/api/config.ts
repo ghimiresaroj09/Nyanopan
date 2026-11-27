@@ -1,4 +1,4 @@
-import { backendApiUrl } from "./backend";
+import { backendApiUrl, fetchNoStore } from "./backend";
 
 const BACKEND_API_URL = backendApiUrl("configuration/");
 
@@ -19,9 +19,7 @@ export interface SiteConfiguration {
 
 export async function getSiteConfiguration(): Promise<SiteConfiguration | null> {
   try {
-    const response = await fetch(BACKEND_API_URL, {
-      cache: "no-store",
-    });
+    const response = await fetchNoStore(BACKEND_API_URL);
 
     if (!response.ok) {
       console.error("Failed to fetch configuration");

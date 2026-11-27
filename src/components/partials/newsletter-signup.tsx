@@ -34,6 +34,7 @@ export function NewsletterSignup({ className }: NewsletterSignupProps) {
     try {
       const response = await fetch("/api/subscription", {
         method: "POST",
+        cache: "no-store",
         headers: {
           "Content-Type": "application/json",
         },

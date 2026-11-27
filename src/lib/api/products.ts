@@ -1,4 +1,4 @@
-import { backendApiUrl } from "./backend";
+import { backendApiUrl, fetchNoStore } from "./backend";
 import type { Product as StorefrontProduct } from "@/types/product";
 
 const BACKEND_API_URL = backendApiUrl("products/");
@@ -247,9 +247,7 @@ export async function getProductsPage(params?: GetProductsParams): Promise<{
 
     console.log('🌐 API Call:', url);
 
-    const response = await fetch(url, {
-      cache: 'no-store', // Don't cache search results
-    });
+    const response = await fetchNoStore(url);
 
     if (!response.ok) {
       console.error("Failed to fetch products", response.status);
@@ -281,9 +279,7 @@ export async function getProduct(slug: string): Promise<ProductDetail | null> {
 
     console.log('🌐 API Call (Product Detail):', url);
 
-    const response = await fetch(url, {
-      cache: 'no-store',
-    });
+    const response = await fetchNoStore(url);
 
     if (!response.ok) {
       console.error(`Failed to fetch product ${slug}`, response.status);

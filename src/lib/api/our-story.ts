@@ -1,4 +1,4 @@
-import { backendApiUrl } from "./backend";
+import { backendApiUrl, fetchNoStore } from "./backend";
 
 const BACKEND_API_URL = backendApiUrl("our-story/");
 
@@ -35,9 +35,7 @@ export interface OurStoryResponse {
 
 export async function getOurStory(): Promise<OurStoryData | null> {
   try {
-    const response = await fetch(BACKEND_API_URL, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    });
+    const response = await fetchNoStore(BACKEND_API_URL);
 
     if (!response.ok) {
       console.error("Failed to fetch our story data");

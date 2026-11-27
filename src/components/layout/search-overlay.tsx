@@ -30,7 +30,6 @@ function useSearchResults(query: string) {
       const apiProducts = await getProducts({ search: query, limit: 8 });
       return apiProducts.map(transformToSearchResult);
     },
-    staleTime: 5 * 60 * 1000,
     enabled: query.trim().length >= 2,
   });
 }

@@ -5,11 +5,11 @@
 
 .blog-prose > :first-child { margin-top: 0; }
 .blog-prose > :last-child { margin-bottom: 0; }
-.blog-prose p { margin: 1.25rem 0; }
+.blog-prose p { margin: 1.25rem 0; font-size: calc(1em + 1px); }
 .blog-prose h2, .blog-prose h3, .blog-prose h4 { margin: 2rem 0 0.75rem; color: #28221c; font-family: var(--font-serif); line-height: 1.25; }
-.blog-prose h2 { font-size: 1.875rem; }
-.blog-prose h3 { font-size: 1.5rem; }
-.blog-prose h4 { font-size: 1.25rem; }
+.blog-prose h2 { font-size: calc(1.875rem + 1px); }
+.blog-prose h3 { font-size: calc(1.5rem + 1px); }
+.blog-prose h4 { font-size: calc(1.25rem + 1px); }
 .blog-prose ul, .blog-prose ol { margin: 1.25rem 0; padding-left: 1.5rem; }
 .blog-prose ul { list-style: disc; }
 .blog-prose ol { list-style: decimal; }
@@ -106,6 +106,61 @@
   }
 }
 
+@layer utilities {
+  :where(p, h1, h2, h3, h4, h5, h6):where(:not(.home-hero *)):where(
+    :not(
+      [class~="text-xs"],
+      [class~="text-sm"],
+      [class~="text-base"],
+      [class~="text-lg"],
+      [class~="text-xl"],
+      [class~="text-2xl"],
+      [class~="text-3xl"],
+      [class~="text-4xl"],
+      [class~="text-5xl"],
+      [class~="text-6xl"],
+      [class~="text-[11px]"],
+      [class~="text-[13.5px]"],
+      [class~="text-[15px]"]
+    )
+  ) {
+    font-size: calc(1em + 1px);
+  }
+
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-xs"]:not(.home-hero *) { font-size: calc(var(--text-xs) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-sm"]:not(.home-hero *) { font-size: calc(var(--text-sm) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-base"]:not(.home-hero *) { font-size: calc(var(--text-base) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-lg"]:not(.home-hero *) { font-size: calc(var(--text-lg) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-xl"]:not(.home-hero *) { font-size: calc(var(--text-xl) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-2xl"]:not(.home-hero *) { font-size: calc(var(--text-2xl) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-3xl"]:not(.home-hero *) { font-size: calc(var(--text-3xl) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-4xl"]:not(.home-hero *) { font-size: calc(var(--text-4xl) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-5xl"]:not(.home-hero *) { font-size: calc(var(--text-5xl) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-6xl"]:not(.home-hero *) { font-size: calc(var(--text-6xl) + 1px); }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-[11px]"]:not(.home-hero *) { font-size: 12px; }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-[13.5px]"]:not(.home-hero *) { font-size: 14.5px; }
+  :is(p, h1, h2, h3, h4, h5, h6)[class~="text-[15px]"]:not(.home-hero *) { font-size: 16px; }
+
+  @media (min-width: 40rem) {
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="sm:text-sm"]:not(.home-hero *) { font-size: calc(var(--text-sm) + 1px); }
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="sm:text-lg"]:not(.home-hero *) { font-size: calc(var(--text-lg) + 1px); }
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="sm:text-3xl"]:not(.home-hero *) { font-size: calc(var(--text-3xl) + 1px); }
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="sm:text-4xl"]:not(.home-hero *) { font-size: calc(var(--text-4xl) + 1px); }
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="sm:text-5xl"]:not(.home-hero *) { font-size: calc(var(--text-5xl) + 1px); }
+  }
+
+  @media (min-width: 48rem) {
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="md:text-4xl"]:not(.home-hero *) { font-size: calc(var(--text-4xl) + 1px); }
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="md:text-5xl"]:not(.home-hero *) { font-size: calc(var(--text-5xl) + 1px); }
+  }
+
+  @media (min-width: 64rem) {
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="lg:text-6xl"]:not(.home-hero *) { font-size: calc(var(--text-6xl) + 1px); }
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="lg:text-[40px]"]:not(.home-hero *) { font-size: 41px; }
+    :is(p, h1, h2, h3, h4, h5, h6)[class~="lg:text-[42px]"]:not(.home-hero *) { font-size: 43px; }
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
@@ -164,6 +219,14 @@
   text-transform: uppercase;
   font-weight: 600;
   color: var(--terracotta);
+}
+
+p.editorial-eyebrow {
+  font-size: calc(0.6875rem + 1px);
+}
+
+.home-hero .editorial-eyebrow {
+  font-size: 0.6875rem;
 }
 
 .editorial-eyebrow::before {

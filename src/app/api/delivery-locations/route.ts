@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { backendApiUrl } from "@/lib/api/backend";
+import { backendApiUrl, fetchNoStore } from "@/lib/api/backend";
 
 const BACKEND_API_URL = backendApiUrl("delivery-locations/");
 
 export async function GET() {
   try {
-    const response = await fetch(BACKEND_API_URL, { cache: "no-store" });
+    const response = await fetchNoStore(BACKEND_API_URL);
     if (!response.ok) {
       return NextResponse.json(
         { success: false, message: "Unable to load delivery locations." },

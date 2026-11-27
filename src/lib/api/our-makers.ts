@@ -1,4 +1,4 @@
-import { backendApiUrl } from "./backend";
+import { backendApiUrl, fetchNoStore } from "./backend";
 
 const BACKEND_API_URL = backendApiUrl("our-makers/");
 
@@ -24,9 +24,7 @@ export interface OurMakersResponse {
 export async function getOurMakers(): Promise<OurMakersData | null> {
   try {
     console.log("🌐 Fetching Our Makers from:", BACKEND_API_URL);
-    const response = await fetch(BACKEND_API_URL, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    });
+    const response = await fetchNoStore(BACKEND_API_URL);
 
     if (!response.ok) {
       console.error("❌ Failed to fetch our makers data - Status:", response.status);

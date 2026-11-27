@@ -1,4 +1,4 @@
-import { backendApiUrl } from "./backend";
+import { backendApiUrl, fetchNoStore } from "./backend";
 
 const BACKEND_API_URL = backendApiUrl("product-models/");
 
@@ -22,9 +22,7 @@ export interface ProductModelsResponse {
 
 export async function getProductModels(): Promise<ProductModel[]> {
   try {
-    const response = await fetch(BACKEND_API_URL, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    });
+    const response = await fetchNoStore(BACKEND_API_URL);
 
     if (!response.ok) {
       console.error("Failed to fetch product models", response.status);

@@ -180,6 +180,7 @@ export default function CheckoutPage() {
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),

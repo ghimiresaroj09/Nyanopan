@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { backendApiUrl } from "@/lib/api/backend";
+import { backendApiUrl, fetchNoStore } from "@/lib/api/backend";
 
 const BACKEND_API_URL = backendApiUrl("subscription/");
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward to backend API
-    const response = await fetch(BACKEND_API_URL, {
+    const response = await fetchNoStore(BACKEND_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

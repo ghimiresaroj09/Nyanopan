@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { backendApiUrl } from "@/lib/api/backend";
+import { backendApiUrl, fetchNoStore } from "@/lib/api/backend";
 
 const BACKEND_API_URL = backendApiUrl("checkout/");
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const response = await fetch(BACKEND_API_URL, {
+    const response = await fetchNoStore(BACKEND_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

@@ -25,7 +25,6 @@ export function HeaderNav({ categories }: HeaderNavProps) {
     },
     { href: "/collections/men", label: "Mens Collections" },
     { href: "/collections/women", label: "Womens Collections" },
-    { href: "/collections/unisex", label: "Unisex Collections" },
     { href: "/our-story", label: "Our Story" },
     { href: "/blog", label: "Journal" },
     { href: "/contact", label: "Contact Us" },

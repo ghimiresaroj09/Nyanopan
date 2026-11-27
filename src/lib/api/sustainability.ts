@@ -1,4 +1,4 @@
-import { backendApiUrl } from "./backend";
+import { backendApiUrl, fetchNoStore } from "./backend";
 
 const BACKEND_API_URL = backendApiUrl("our-sustainability/");
 
@@ -22,9 +22,7 @@ export interface SustainabilityResponse {
 
 export async function getSustainability(): Promise<SustainabilityData | null> {
   try {
-    const response = await fetch(BACKEND_API_URL, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    });
+    const response = await fetchNoStore(BACKEND_API_URL);
 
     if (!response.ok) {
       console.error("Failed to fetch sustainability data");

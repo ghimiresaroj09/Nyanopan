@@ -12,3 +12,7 @@ export const BACKEND_API_BASE_URL = `${backendUrl}/api/v1`;
 export function backendApiUrl(path: string): string {
   return `${BACKEND_API_BASE_URL}/${path.replace(/^\/+/, "")}`;
 }
+
+export function fetchNoStore(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  return fetch(input, { ...init, cache: "no-store" });
+}

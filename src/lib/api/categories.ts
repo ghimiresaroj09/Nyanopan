@@ -1,4 +1,4 @@
-import { backendApiUrl } from "./backend";
+import { backendApiUrl, fetchNoStore } from "./backend";
 
 const BACKEND_API_URL = backendApiUrl("categories/");
 
@@ -31,9 +31,7 @@ export interface CategoriesResponse {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const response = await fetch(BACKEND_API_URL, {
-      next: { revalidate: 60 }, // Cache for 1 minute (was 1 hour)
-    });
+    const response = await fetchNoStore(BACKEND_API_URL);
 
     if (!response.ok) {
       console.error("Failed to fetch categories");
