@@ -20,7 +20,7 @@ export interface SiteConfiguration {
 export async function getSiteConfiguration(): Promise<SiteConfiguration | null> {
   try {
     const response = await fetch(BACKEND_API_URL, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      cache: "no-store",
     });
 
     if (!response.ok) {

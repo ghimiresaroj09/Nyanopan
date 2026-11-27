@@ -109,7 +109,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/delivery-locations")
+    fetch("/api/delivery-locations", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("Failed to load delivery locations");
         return response.json();
